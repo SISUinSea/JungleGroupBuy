@@ -1,0 +1,64 @@
+{% extends 'layout.html' %}
+
+{% block title %}나의 정보 - {{user_info.name}}{% endblock %}
+
+{% block content %}
+
+
+<div class="max-w-md mx-auto mt-10 px-4">
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+        
+        <!-- 상단 타이틀 구역 -->
+        <div class="text-center mb-10">
+            <div class="inline-block p-3 bg-blue-50 rounded-2xl mb-4">
+                <span class="text-3xl">👤</span>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">내 정보 수정</h2>
+        </div>
+
+        <!-- 2. 정보 입력/확인 구역 (세로로 길게 배치) -->
+        <div class="space-y-6">
+            
+            <!-- 이름 (읽기 전용 혹은 수정 가능) -->
+            <div>
+                <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">Name</label>
+                <input type="text" value="{{ user_info.name }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="이름을 입력하세요">
+            </div>
+
+            <!-- 비밀번호 -->
+            <div>
+                <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">Password</label>
+                <input type="password" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="새 비밀번호">
+            </div>
+
+            <!-- 비밀번호 확인 -->
+            <div>
+                <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">Confirm Password</label>
+                <input type="password" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="비밀번호 재입력">
+            </div>
+
+            <!-- 반 & 기수 (한 줄에 배치하거나 세로로) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">기수</label>
+                    <input type="text" value="{{ user_info.class_num }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">반</label>
+                    <input type="text" value="{{ user_info.cohort }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. 수정하기 버튼 -->
+        <div class="mt-12">
+            <button class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
+                수정하기
+            </button>
+        </div>
+        
+    </div>
+</div>
+
+{% endblock %}

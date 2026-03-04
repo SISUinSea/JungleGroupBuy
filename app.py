@@ -2,25 +2,15 @@ import pymongo
 from flask import Flask, render_template, request, jsonify, redirect, session
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from datetime import datetime
-from flask_bcrypt import Bcrypt # 비밀번호 암호화 라이브러리
-from functools import wraps     # 로그인 상태 체크 데코레이터
 
 app = Flask(__name__)
 app.secret_key = 'jungle'
 client = MongoClient('mongodb+srv://jungle_for_all:1234@junglegroupbuy.vvvtwuf.mongodb.net/?appName=jungleGroupBuy', tlsAllowInvalidCertificates=True)
 db = client.jungle_groupbuy
 
-# bcrypt 라이브러리 사용하기 위한 설정입니다. 꼬오옥 상단에 임포트 해줘야 쓸 수 있어요.
-bcrypt = Bcrypt(app)
-
 # =====================================================================
 # 🚧 [영역 1]
 # =====================================================================
-# 회원가입 기능
-@app.route('/signup')
-def sign_up_page():
-    return render_template('signup.html')
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -52,6 +42,7 @@ def signup():
 
 # =====================================================================
 # 🚧 [영역 2]
+<<<<<<< HEAD
 # 로그인
 @app.route('/login', methods=['GET'])
 def login_page():
@@ -87,6 +78,8 @@ def logout():
     return redirect('/login')
 
 
+=======
+>>>>>>> 39ba6aeab5c68f03ef57df19177ae5fb8a23416f
 # =====================================================================
 
 
@@ -94,6 +87,26 @@ def logout():
 
 # =====================================================================
 # 🚧 [영역 3]
+@app.route('/api/user/me', methods=['GET']) #마이페이지 정보 수집
+def user_me():
+    session['username']='test_user'
+    user_id=session.get('username')
+    if user_id:
+        user_info=db.user.find_one({'username':user_id}, {'hashed_pw':0})
+        return render_template('mypage.html', user_info=user_info)
+    else:
+        return redirect('/api/login')
+    
+@app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
+def user_order():
+    user_id=session.get('username')
+    if user_id:
+        user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
+        return render_template('.html', user_orders=user_orders)
+    else:
+        return redirect('/api/login')
+
+#마이페이지 정보 수정 반영
 # =====================================================================
 
 
@@ -176,6 +189,60 @@ def api_create_group_buy():
         "inserted_id": str(result.inserted_id)
     })
 
+
+@app.route('/api/order', methods=['POST'])
+def api_add_order():
+    # 1. 프론트엔드에서 보낸 데이터 받기
+    data = request.get_json()
+    group_buy_id = data.get('groupBuyId')
+    items = data.get('items', [])
+
+    calculated_total = sum(item.get('price', 0) * item.get('quantity', 0) for item in items)
+
+    if not group_buy_id or not items:
+        return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
+
+    ## TODO. 세션 구현 후 실제 유저로 연결하기
+    order_user = db.user.find_one({"name": "잠만보"})
+    if not order_user:
+        return jsonify({"result": "fail", "msg": "테스트 유저(잠만보)가 없습니다."}), 500
+
+    now = datetime.now()
+
+
+    new_order = {
+        "_id": ObjectId(),  # 이 주문표 자체의 고유 ID (삭제 기능을 위해 필요함!)
+        "groupBuyId": ObjectId(group_buy_id),
+        "user": {
+            "userId": order_user["_id"],
+            "name": order_user["name"],
+            "class": order_user.get("class", ""),
+            "generation": order_user.get("generation", 0)
+        },
+        "status": "pending",
+        "totalAmount": calculated_total,  # 백엔드가 직접 계산한 금액
+        "items": items,
+        "createdAt": now,
+        "updatedAt": now
+    }
+
+    # 4. DB 업데이트 (동시성 방어 및 원자성 보장)
+    try:
+        db.group_buys.update_one(
+            {"_id": ObjectId(group_buy_id)},
+            {
+                # 배열에는 새로운 주문을 쑤셔 넣고($push)
+                "$push": {"orders": new_order},
+                # 현재 총액에는 방금 계산한 금액을 안전하게 더해라($inc)
+                "$inc": {"currentAmount": calculated_total}
+            }
+        )
+    except Exception as e:
+        print(f"주문 DB 업데이트 에러: {e}")
+        return jsonify({"result": "fail", "msg": "DB 저장 중 오류가 발생했습니다."}), 500
+
+    # 5. 프론트엔드에 성공 신호 보내기 (새로고침을 유도함)
+    return jsonify({"result": "success"})
 
 
 # ============================================================================
