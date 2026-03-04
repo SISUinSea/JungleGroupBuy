@@ -2,15 +2,25 @@ import pymongo
 from flask import Flask, render_template, request, jsonify, redirect, session
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from datetime import datetime
+from flask_bcrypt import Bcrypt # 비밀번호 암호화 라이브러리
+from functools import wraps     # 로그인 상태 체크 데코레이터
 
 app = Flask(__name__)
 app.secret_key = 'jungle'
 client = MongoClient('mongodb+srv://jungle_for_all:1234@junglegroupbuy.vvvtwuf.mongodb.net/?appName=jungleGroupBuy', tlsAllowInvalidCertificates=True)
 db = client.jungle_groupbuy
 
+# bcrypt 라이브러리 사용하기 위한 설정입니다. 꼬오옥 상단에 임포트 해줘야 쓸 수 있어요.
+bcrypt = Bcrypt(app)
+
 # =====================================================================
 # 🚧 [영역 1]
 # =====================================================================
+# 회원가입 기능
+@app.route('/signup')
+def sign_up_page():
+    return render_template('signup.html')
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -42,7 +52,7 @@ def signup():
 
 # =====================================================================
 # 🚧 [영역 2]
-<<<<<<< HEAD
+# =====================================================================
 # 로그인
 @app.route('/login', methods=['GET'])
 def login_page():
@@ -77,16 +87,9 @@ def logout():
     session.clear()
     return redirect('/login')
 
-
-=======
->>>>>>> 39ba6aeab5c68f03ef57df19177ae5fb8a23416f
-# =====================================================================
-
-
-
-
 # =====================================================================
 # 🚧 [영역 3]
+# =====================================================================
 @app.route('/api/user/me', methods=['GET']) #마이페이지 정보 수집
 def user_me():
     session['username']='test_user'
@@ -107,9 +110,6 @@ def user_order():
         return redirect('/api/login')
 
 #마이페이지 정보 수정 반영
-# =====================================================================
-
-
 
 # =====================================================================
 # 🚧 [영역 4]
@@ -243,8 +243,7 @@ def api_add_order():
 
     # 5. 프론트엔드에 성공 신호 보내기 (새로고침을 유도함)
     return jsonify({"result": "success"})
-
-
+    
 # ============================================================================
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5001, debug=True)
