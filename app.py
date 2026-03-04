@@ -103,7 +103,6 @@ def user_me():
     else:
         return redirect('/api/login')
 
-<<<<<<< HEAD
 @app.route('/api/user/update', methods=['POST']) #정보수정(이름, 반, 기수)
 def user_update():
     user_id=session.get('username')
@@ -127,14 +126,12 @@ def user_update():
     return "<script>alert('수정이 완료되었습니다!'); window.location.href='/api/user/me';</script>"
 
     
-=======
->>>>>>> fba1f702e3b6a0bfc9e87898965381710c32f411
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
     user_id=session.get('username')
     if user_id:
         user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
-        return render_template('.html', user_orders=user_orders)
+        return render_template('myorder.html', user_orders=user_orders)
     else:
         return redirect('/api/login')
 
