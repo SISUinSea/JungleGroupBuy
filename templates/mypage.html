@@ -22,7 +22,7 @@
             <!-- 이름 (읽기 전용 혹은 수정 가능) -->
             <div>
                 <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">Name</label>
-                <input type="text" value="{{ user_info.username }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="이름을 입력하세요">
+                <input type="text" value="{{ user_info.name }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="이름을 입력하세요">
             </div>
 
             <!-- 비밀번호 -->
@@ -41,11 +41,11 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">기수</label>
-                    <input type="text" value="{{ user_info.class_num }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: 12기">
+                    <input type="text" value="{{ user_info.class_num }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-400 mb-2 ml-1 uppercase">반</label>
-                    <input type="text" value="{{ user_info.cohort }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: 2반">
+                    <input type="text" value="{{ user_info.cohort }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                 </div>
             </div>
 
