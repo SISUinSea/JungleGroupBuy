@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+
+{% block title %}공동주문 작성 - 정탐공{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-20">
+    <div class="mb-10 text-center">
+        <h1 class="text-4xl font-black text-gray-800 mb-4">새로운 공구 파티 모집</h1>
+        <p class="text-gray-500">다이소 3만원 무료배송, 정글러들과 함께 채워보세요!</p>
+    </div>
+
+    <!-- 메인 컨테이너 (경로 B: 매우 심플한 폼) -->
+    <div class="bg-white rounded-[40px] shadow-sm border border-gray-100 p-10 space-y-8">
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-3 ml-2">마감일 <span class="text-blue-500">*</span></label>
+            <input type="date" id="input-deadline"
+                   class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-base focus:ring-2 focus:ring-blue-400 outline-none transition">
+            <p class="text-xs text-gray-400 mt-2 ml-2">오늘 이전의 날짜는 선택할 수 없습니다.</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-3 ml-2">오픈채팅방 링크 <span class="text-blue-500">*</span></label>
+            <input type="url" id="input-url" placeholder="https://open.kakao.com/o/..."
+                   class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-base focus:ring-2 focus:ring-blue-400 outline-none transition">
+        </div>
+
+        <!-- 최종 제출 버튼 -->
+        <button onclick="createEmptyGroupBuy()" class="w-full bg-gray-800 text-white py-5 rounded-[20px] font-black text-xl hover:bg-black transition shadow-lg mt-8 active:scale-95">
+            방 만들기
+        </button>
+    </div>
+</div>
+
+<script>
+    async function createEmptyGroupBuy() {
+        const deadline = document.getElementById('input-deadline').value;
+        const openChatUrl = document.getElementById('input-url').value;
+
+        // 1. 필수값 누락 방어
+        if (!deadline || !openChatUrl) {
+            alert('마감일과 오픈채팅방 링크를 모두 입력해주세요.');
+            return;
+        }
+
+        // 2. 과거 시각 설정 방지
+        const selectedDate = new Date(deadline);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (selectedDate < today) {
+            alert('마감일은 오늘 또는 미래의 날짜여야 합니다.');
+            return;
+        }
+
+        const response = await fetch('/api/group-buy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                deadline: deadline,
+                openChatUrl: openChatUrl,
+                order: [],
+                totalAmount: 0
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.result === 'success') {
+            window.location.href = `/group-buy/${result.inserted_id}`;
+        } else {
+            alert('생성 실패: ' + result.msg);
+        }
+    }
+</script>
+{% endblock %}
