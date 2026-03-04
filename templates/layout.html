@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}정탐공{% endblock %}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        // 테일윈드 설정 객체 (JS Object)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        jungle: '#1d4ed8', // 커스텀 색상 'jungle' 정의
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- 상단 네비게이션 바 -->
+    <nav class="bg-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-jungle">정탐공 🍎</a>
+            <div class="space-x-4">
+                <a href="/" class="text-gray-700 hover:text-jungle">홈</a>
+                <a href="/login" class="bg-jungle text-white px-4 py-2 rounded-lg hover:opacity-90">로그인</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 실제 페이지 내용이 들어갈 구멍 -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="text-center py-10 text-gray-400">
+        © 2026 Jungle Discovery Group Buy
+    </footer>
+</body>
+</html>
