@@ -148,7 +148,7 @@
                 </div>
             </div>
 
-            <button class="w-full bg-gray-800 text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg">
+            <button onclick="sendToServer()" class="w-full bg-gray-800 text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg">
                 추가 주문하기
             </button>
         </div>
@@ -228,14 +228,14 @@
             return;
         }
 
-        const totalAmount = myItems.reduce((sum, item) => sum + item.subTotal, 0); // myItems 사용
+        const totalAmount = myItems.reduce((sum, item) => sum + item.subTotal, 0);
 
         const response = await fetch('/api/order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 groupBuyId: '{{ product._id }}',
-                items: myItems, // myItems 사용
+                items: myItems,
                 totalAmount: totalAmount
             })
         });

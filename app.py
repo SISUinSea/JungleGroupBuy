@@ -177,6 +177,60 @@ def api_create_group_buy():
     })
 
 
+@app.route('/api/order', methods=['POST'])
+def api_add_order():
+    # 1. 프론트엔드에서 보낸 데이터 받기
+    data = request.get_json()
+    group_buy_id = data.get('groupBuyId')
+    items = data.get('items', [])
+
+    calculated_total = sum(item.get('price', 0) * item.get('quantity', 0) for item in items)
+
+    if not group_buy_id or not items:
+        return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
+
+    ## TODO. 세션 구현 후 실제 유저로 연결하기
+    order_user = db.user.find_one({"name": "잠만보"})
+    if not order_user:
+        return jsonify({"result": "fail", "msg": "테스트 유저(잠만보)가 없습니다."}), 500
+
+    now = datetime.now()
+
+
+    new_order = {
+        "_id": ObjectId(),  # 이 주문표 자체의 고유 ID (삭제 기능을 위해 필요함!)
+        "groupBuyId": ObjectId(group_buy_id),
+        "user": {
+            "userId": order_user["_id"],
+            "name": order_user["name"],
+            "class": order_user.get("class", ""),
+            "generation": order_user.get("generation", 0)
+        },
+        "status": "pending",
+        "totalAmount": calculated_total,  # 백엔드가 직접 계산한 금액
+        "items": items,
+        "createdAt": now,
+        "updatedAt": now
+    }
+
+    # 4. DB 업데이트 (동시성 방어 및 원자성 보장)
+    try:
+        db.group_buys.update_one(
+            {"_id": ObjectId(group_buy_id)},
+            {
+                # 배열에는 새로운 주문을 쑤셔 넣고($push)
+                "$push": {"orders": new_order},
+                # 현재 총액에는 방금 계산한 금액을 안전하게 더해라($inc)
+                "$inc": {"currentAmount": calculated_total}
+            }
+        )
+    except Exception as e:
+        print(f"주문 DB 업데이트 에러: {e}")
+        return jsonify({"result": "fail", "msg": "DB 저장 중 오류가 발생했습니다."}), 500
+
+    # 5. 프론트엔드에 성공 신호 보내기 (새로고침을 유도함)
+    return jsonify({"result": "success"})
+
 
 # ============================================================================
 if __name__ == '__main__':
