@@ -21,16 +21,16 @@ db = client.jungle_groupbuy
 
 # =====================================================================
 # 🚧 [영역 3]
-@app.route('/api/user/me', methods=['GET'])
+@app.route('/api/user/me', methods=['GET']) #마이페이지 정보 수집
 def user_me():
     user_id=session.get('username')
     if user_id:
         user_info=db.user.find_one({'username':user_id}, {'hashed_pw':0})
-        return render_template('.html', user_info=user_info)
+        return render_template('mypage.html', user_info=user_info)
     else:
         return redirect('/api/login')
     
-@app.route('/api/user/order', methods=['GET'])
+@app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
     user_id=session.get('username')
     if user_id:
