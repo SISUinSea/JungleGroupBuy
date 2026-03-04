@@ -1,5 +1,5 @@
 import pymongo
-from flask import Flask, render_template, request, jsonify, redirect, session
+from flask import Flask, render_template, request, jsonify, redirect, session, flash
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -62,15 +62,18 @@ def login_page():
 def login():
     username = request.form['username']
     password = request.form['password']
-
+    
     user = db.users.find_one({'username': username})
-
+    
     if user and bcrypt.check_password_hash(user['password'], password):
         session['user_id'] = str(user['_id'])
         session['username'] = user['username']
-        return redirect('/')  # 로그인 성공, groupBuyList 페이지로 이동 필요.
+        flash('로그인 성공!', 'success')  # flash
+        return redirect('/')
     
-    return "아이디 또는 비밀번호가 올바르지 않습니다."
+    # 로그인 실패...
+    alert_msg = "아이디와 비밀번호를 확인하세요."
+    return render_template('login.html', alert_msg=alert_msg)
 
 # 로그인 여부 확인하는 데코레이터 함수입니당. 로그인이 필요한 페이지에 @login_required 데코레이터를 붙여주시면 됩니다!!
 def login_required(f):
@@ -100,6 +103,7 @@ def user_me():
     else:
         return redirect('/api/login')
 
+<<<<<<< HEAD
 @app.route('/api/user/update', methods=['POST']) #정보수정(이름, 반, 기수)
 def user_update():
     user_id=session.get('username')
@@ -123,6 +127,8 @@ def user_update():
     return "<script>alert('수정이 완료되었습니다!'); window.location.href='/api/user/me';</script>"
 
     
+=======
+>>>>>>> fba1f702e3b6a0bfc9e87898965381710c32f411
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
     user_id=session.get('username')
@@ -266,7 +272,6 @@ def api_add_order():
 
     # 5. 프론트엔드에 성공 신호 보내기 (새로고침을 유도함)
     return jsonify({"result": "success"})
-    
-# ============================================================================
+
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=5001, debug=True)
+    app.run(debug=True)
