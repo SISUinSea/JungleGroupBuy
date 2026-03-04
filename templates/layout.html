@@ -22,15 +22,36 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
     <!-- 상단 네비게이션 바 -->
-    <nav class="bg-white shadow-md">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-jungle">정탐공 🍎</a>
-            <div class="space-x-4">
-                <a href="/" class="text-gray-700 hover:text-jungle">홈</a>
-                <a href="/login" class="bg-jungle text-white px-4 py-2 rounded-lg hover:opacity-90">로그인</a>
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
+
+            <!-- 로고 구역 -->
+            <a href="/" class="flex items-center space-x-2">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">🍎</span>
+                </div>
+                <span class="text-2xl font-bold tracking-tight text-gray-800">정탐공</span>
+            </a>
+
+            <!-- 네비게이션 메뉴 및 버튼 -->
+            <div class="flex items-center space-x-8">
+                <nav class="hidden md:flex items-center space-x-6 text-[15px] font-medium text-gray-500">
+                    <a href="/" class="hover:text-gray-900 transition">공동주문</a>
+                    <a href="/my-orders" class="hover:text-gray-900 transition">나의 주문</a>
+                </nav>
+
+                <div class="flex items-center space-x-3">
+                    <a href="/mypage" class="px-4 py-2 border border-gray-300 rounded-lg text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition">
+                        My page
+                    </a>
+                    <a href="/logout" class="px-4 py-2 bg-gray-800 rounded-lg text-[14px] font-medium text-white hover:bg-gray-900 transition shadow-sm">
+                        Sign out
+                    </a>
+                </div>
             </div>
+
         </div>
-    </nav>
+    </header>
 
     <!-- 실제 페이지 내용이 들어갈 구멍 -->
     <main class="max-w-6xl mx-auto px-4 py-8">
@@ -38,7 +59,7 @@
     </main>
 
     <footer class="text-center py-10 text-gray-400">
-        © 2026 Jungle Discovery Group Buy
+        © 2026 Jungle Group Buy
     </footer>
 </body>
 </html>
