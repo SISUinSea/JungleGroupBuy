@@ -21,7 +21,7 @@ bcrypt = Bcrypt(app)
 def sign_up_page():
     return render_template('signup.html')
 
-@app.route('signup', methods=['POST'])
+@app.route('/signup', methods=['POST'])
 def signup():
     if request.method == 'POST':
         username = request.form['username']
@@ -45,16 +45,16 @@ def signup():
             'createdAt': createdAt
             }
         
-        db.user.insert_one(user_info)
+        db.users.insert_one(user_info)
         return redirect('/login')
      
 
 # =====================================================================
 # 🚧 [영역 2]
-# 로그인 기능 구현하기
+# 로그인
 @app.route('/login', methods=['GET'])
 def login_page():
-    return "로그인 페이지입니다!"
+    return render_template('login.html')  # 로그인 페이지로 이동
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -66,7 +66,7 @@ def login():
     if user and bcrypt.check_password_hash(user['password'], password):
         session['user_id'] = str(user['_id'])
         session['username'] = user['username']
-        return redirect('/')  # 로그인 성공
+        return redirect('/')  # 로그인 성공, groupBuyList 페이지로 이동 필요.
     
     return "아이디 또는 비밀번호가 올바르지 않습니다."
 
