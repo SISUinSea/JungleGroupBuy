@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, session
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'jungle'
@@ -11,20 +10,7 @@ db = client.jungle_groupbuy
 # =====================================================================
 # 🚧 [영역 1]
 # =====================================================================
-@app.route('/signup', methods=['POST'])
-def signup():
-    username = request.form['username']
-    password = request.form['password']
-    name = request.form['name']
-    email = request.form['slack_email']
-    generation = request.form['generation']
-    class_number = request.form['class_number']
-    createdAt = datetime.now()
 
-    user_info = {'username': username, 'password': password, 'name': name, 'email': email, 'generation': generation, 'class_number': class_number, 'createdAt': createdAt}
-    db.users.insert_one(user_info)
-
-    return redirect('/login')
 
 # =====================================================================
 # 🚧 [영역 2]
@@ -35,6 +21,24 @@ def signup():
 
 # =====================================================================
 # 🚧 [영역 3]
+@app.route('/api/user/me', methods=['GET'])
+def user_me():
+    user_id=session.get('username')
+    if user_id:
+        user_info=db.user.find_one({'username':user_id}, {'hashed_pw':0})
+        return render_template('.html', user_info=user_info)
+    else:
+        return redirect('/api/login')
+    
+@app.route('/api/user/order', methods=['GET'])
+def user_order():
+    user_id=session.get('username')
+    if user_id:
+        user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
+        return render_template('.html', user_orders=user_orders)
+    else:
+        return redirect('/api/login')
+
 # =====================================================================
 
 
