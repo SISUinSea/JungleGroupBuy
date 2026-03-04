@@ -23,6 +23,7 @@ db = client.jungle_groupbuy
 # 🚧 [영역 3]
 @app.route('/api/user/me', methods=['GET']) #마이페이지 정보 수집
 def user_me():
+    session['username']='test_user'
     user_id=session.get('username')
     if user_id:
         user_info=db.user.find_one({'username':user_id}, {'hashed_pw':0})
