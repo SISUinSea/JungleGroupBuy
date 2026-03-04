@@ -49,6 +49,7 @@ def signup():
 
 # =====================================================================
 # 🚧 [영역 3]
+# # =====================================================================
 @app.route('/api/user/me', methods=['GET']) #마이페이지 정보 수집
 def user_me():
     session['username']='test_user'
@@ -68,8 +69,9 @@ def user_order():
     else:
         return redirect('/api/login')
 
-#마이페이지 정보 수정 반영
-# =====================================================================
+@app.route('/api/user', methods=['PATCH'])
+def user_update():
+    
 
 
 
