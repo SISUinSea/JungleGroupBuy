@@ -1,0 +1,256 @@
+{% extends 'layout.html' %}
+
+{% block title %}공동구매 상세 - {{ product.groupBuyNumber }}{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="/" class="text-gray-500 hover:text-gray-800 flex items-center gap-2 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        목록으로
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+
+    <div class="lg:col-span-2 space-y-10">
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-start mb-6">
+
+                <span class="px-4 py-1.5 bg-green-100 text-green-600 rounded-full text-sm font-bold">
+                    {{ '모집중' if product.status == 'open' else '마감' }}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div>
+                    <h2 class="text-sm font-bold text-gray-400 mb-1">마감일</h2>
+                    <p class="text-lg font-semibold text-gray-700">{{ product.deadline.strftime('%Y. %m. %d.') if product.deadline else '-' }}</p>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-400 mb-1">오픈채팅 링크</h2>
+                    <a href="{{ product.openChatUrl }}" target="_blank" class="text-blue-500 hover:underline font-medium break-all">
+                        {{ product.openChatUrl }}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-50 bg-gray-50/50">
+                <h3 class="font-bold text-gray-800">참여자 이름 및 주문 상세</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 text-gray-400 text-xs uppercase font-bold">
+                        <tr>
+                            <th class="px-6 py-4">참여자</th>
+                            <th class="px-6 py-4">주문금액(₩)</th>
+                            <th class="px-6 py-4 text-center">주문상태</th>
+                            <th class="px-6 py-4"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for order in product.orders %}
+                        <tr class="hover:bg-gray-50/50 transition">
+                            <td class="px-6 py-5">
+                                <div class="font-bold text-gray-800">{{ order.user.name }}</div>
+                                <div class="text-xs text-gray-400">{{ order.user.class }} | {{ order.user.generation }}기</div>
+                            </td>
+                            <td class="px-6 py-5 font-semibold text-gray-700">
+                                {{ "{:,}".format(order.totalAmount) }}
+                            </td>
+                            <td class="px-6 py-5 text-center">
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold
+                                    {{ 'bg-yellow-100 text-yellow-600' if order.status == 'pending' }}
+                                    {{ 'bg-blue-100 text-blue-600' if order.status == 'paid' }}
+                                    {{ 'bg-green-100 text-green-600' if order.status == 'success' }}">
+                                    {{ '입금 대기' if order.status == 'pending' }}
+                                    {{ '입금 확인' if order.status == 'paid' }}
+                                    {{ '완료' if order.status == 'success' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-right">
+                                <button class="text-gray-300 hover:text-red-500 transition">삭제</button>
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50/30">
+                            <td colspan="4" class="px-6 py-3">
+                                <div class="space-y-2 border-l-2 border-gray-200 ml-2 pl-4">
+                                    {# 중요: order.items 대신 order['items']를 사용합니다 items가 키워드여서 못써요!!! #}
+                                    {% for item in order['items'] %}
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">
+                                            <span class="font-medium text-gray-800">{{ item.productName }}</span>
+                                            <span class="text-gray-400 ml-2">{{ item.quantity }}개</span>
+                                        </span>
+                                        <span class="font-mono text-gray-500">{{ "{:,}".format(item.price) }}원</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 주문 위젯 -->
+    <div class="lg:sticky lg:top-8">
+        <div class="bg-gray-200 rounded-3xl p-6 shadow-inner">
+            <div class="flex justify-between items-end mb-3">
+                <div class="text-xs font-black text-gray-500">Current Progress</div>
+                <div class="text-sm font-bold text-gray-800">
+                    {{ "{:,}".format(product.currentAmount) }} / {{ "{:,}".format(product.targetAmount) }} 원
+                </div>
+            </div>
+            <div class="w-full bg-white/50 h-3 rounded-full mb-8 overflow-hidden">
+                {% set progress = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0 else 0 %}
+                <div class="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                     style="width: {{ progress if progress <= 100 else 100 }}%"></div>
+            </div>
+
+
+                <!-- 2. 임시 장바구니 리스트가 보일 구역 -->
+            <div class="mb-8">
+                <p id="empty-msg" class="text-center text-gray-500 py-10">주문할 물품을 추가해주세요.</p>
+                <div id="order-list" class="space-y-4">
+                    <!-- 여기에 추가한 아이템들이 자바스크립트로 그려집니다 -->
+                </div>
+            </div>
+
+                <!-- 3. 입력창 구역 -->
+                <div class="space-y-3">
+                    <div class="flex gap-2">
+                        <!-- 물품 명 입력 -->
+                        <input type="text" id="input-name" placeholder="물품 명"
+                               class="flex-1 min-w-0 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
+                        <!-- 개수 입력 -->
+                        <input type="number" id="input-qty" placeholder="개수"
+                               class="w-10 bg-white rounded-full px-3 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
+                        <!-- 가격 입력 -->
+                        <input type="number" id="input-price" placeholder="가격"
+                               class="w-16 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
+
+                        <!-- [추가] 버튼 -->
+                        <button onclick="addItem()"
+                                class="bg-[#E5E5E5] border border-gray-400 px-4 py-2 rounded-2xl font-bold hover:bg-white transition active:scale-95">
+                            추가
+                        </button>
+                    </div>
+                    <!-- 다이소 URL 입력 -->
+                    <input type="text" id="input-url" placeholder="다이소 URL 입력"
+                           class="w-full bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
+                </div>
+            </div>
+
+            <button class="w-full bg-gray-800 text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg">
+                추가 주문하기
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+    <script>
+       let myItems = []
+
+       function addItem() {
+           let name = document.getElementById("input-name").value;
+           let qty = parseInt(document.getElementById("input-qty").value);
+           let price = parseInt(document.getElementById("input-price").value);
+           let url = document.getElementById("input-url").value;
+
+           // url은 필수가 아닙니다.
+           if (!name || !qty || !price) {
+               alert('물품명, 개수, 가격을 올바르게 입력해주세요');
+               return;
+           }
+
+           const newItem = {
+               productName: name,
+               quantity: qty,
+               price: price,
+               subTotal: qty * price, // 소계 계산
+               productUrl: url
+           }
+
+           myItems.push(newItem);
+
+           renderList();
+
+           document.getElementById("input-name").value='';
+           document.getElementById("input-qty").value='';
+           document.getElementById("input-price").value='';
+           document.getElementById("input-url").value='';
+           document.getElementById("input-name").focus();
+       }
+
+       function removeItem(index) {
+            myItems.splice(index, 1); // myItems 사용
+            renderList();
+        }
+
+       function renderList() {
+        const listDiv = document.getElementById('order-list');
+        const emptyMsg = document.getElementById('empty-msg');
+
+        if (myItems.length > 0) {
+            emptyMsg.style.display = 'none';
+        } else {
+            emptyMsg.style.display = 'block';
+        }
+
+        listDiv.innerHTML = '';
+
+        myItems.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = "flex justify-between items-center text-sm font-medium border-b border-gray-300 pb-2 mb-2 bg-white p-2 rounded-lg";
+            row.innerHTML = `
+                <div class="flex-1 truncate">${item.productName}</div>
+                <div class="w-12 text-center text-gray-500">${item.quantity}개</div>
+                <div class="w-20 text-right text-gray-500">${item.price.toLocaleString()}원</div>
+                <div class="w-20 text-right font-bold text-gray-800">${item.subTotal.toLocaleString()}원</div>
+                <button onclick="removeItem(${index})" class="ml-2 text-red-400 hover:text-red-600 font-bold">X</button>
+            `;
+            listDiv.appendChild(row);
+        });
+     }
+
+     async function sendToServer() {
+        if (myItems.length === 0) { // myItems 사용
+            alert("주문할 물품을 먼저 추가해주세요!");
+            return;
+        }
+
+        const totalAmount = myItems.reduce((sum, item) => sum + item.subTotal, 0); // myItems 사용
+
+        const response = await fetch('/api/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                groupBuyId: '{{ product._id }}',
+                items: myItems, // myItems 사용
+                totalAmount: totalAmount
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.result === 'success') {
+            window.location.reload();
+        } else {
+            alert("주문 실패: " + result.msg);
+        }
+    }
+
+    // 페이지 로드 시 초기 렌더링
+    renderList();
+    </script>
+
+{% endblock %}
