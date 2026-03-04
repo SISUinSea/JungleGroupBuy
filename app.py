@@ -95,10 +95,33 @@ def user_me():
     session['username']='test_user'
     user_id=session.get('username')
     if user_id:
-        user_info=db.user.find_one({'username':user_id}, {'hashed_pw':0})
+        user_info=db.user.find_one({'username':user_id}, {'hashed_password':0})
         return render_template('mypage.html', user_info=user_info)
     else:
         return redirect('/api/login')
+
+@app.route('/api/user/update', methods=['POST']) #정보수정(이름, 반, 기수)
+def user_update():
+    user_id=session.get('username')
+    if not user_id:
+        return redirect('/api/login')
+    
+    name=request.form.get('name','').strip()
+    class_number=request.form.get('class_number','').strip()
+    generation=request.form.get('generation','').strip()
+    print(f"DEBUG: '{name}', '{class_number}', '{generation}'")
+
+    if not name or not class_number or not generation:
+        return "<script>alert('모든 정보를 올바르게 입력해주세요.'); history.back();</script>"
+
+    db.user.update_one({'username': session['username']}, {'$set': {
+        'name':name,
+        'class_number':class_number,
+        'generation':generation
+    }})
+    
+    return "<script>alert('수정이 완료되었습니다!'); window.location.href='/api/user/me';</script>"
+
     
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
@@ -109,7 +132,7 @@ def user_order():
     else:
         return redirect('/api/login')
 
-#마이페이지 정보 수정 반영
+
 
 # =====================================================================
 # 🚧 [영역 4]
