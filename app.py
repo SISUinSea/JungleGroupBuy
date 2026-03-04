@@ -1,3 +1,4 @@
+import pymongo
 from flask import Flask, render_template, request, jsonify, redirect, session
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -21,7 +22,7 @@ bcrypt = Bcrypt(app)
 def sign_up_page():
     return render_template('signup.html')
 
-@app.route('signup', methods=['POST'])
+@app.route('/signup', methods=['POST'])
 def signup():
     if request.method == 'POST':
         username = request.form['username']
@@ -101,25 +102,78 @@ def logout():
 # 🚧 [영역 4]
 # =====================================================================
 
-@app.route('/')
-def mypage():
-    pass
+@app.route('/', methods=['GET'])
+def getGroupBuyList():
+    result_list = list(db.group_buys.find({}).sort("createdAt", pymongo.DESCENDING))
 
-    # 1. DB에 넣을 가짜 데이터(JSON/Dictionary) 만들기
-    test_data = {
-        "title": "클라우드 DB 연결 테스트",
-        "message": "이 데이터가 Atlas에 보인다면 연결 대성공입니다!",
-        "author": "리더"
+    return render_template('groupBuyList.html', items=result_list)
+
+
+@app.route('/group-buy/<groupbuyid>', methods=['GET'])
+def getGroupBuy(groupbuyid):
+    result = db.group_buys.find_one({'_id': ObjectId(groupbuyid)})
+    if result is None:
+        return "게시글을 찾을 수 없습니다.", 404
+    return render_template('groupBuyDetail.html', product=result)
+
+@app.route('/group-buy/create', methods=['GET'])
+def getGroupBuyCreate():
+
+    return render_template('groupBuyCreate.html')
+
+
+@app.route('/api/group-buy', methods=['POST'])
+def api_create_group_buy():
+    data = request.get_json()
+
+    deadline_str = data.get('deadline')
+    open_chat_url = data.get('openChatUrl')
+    orders = data.get('order', [])
+    total_amount = data.get('totalAmount', 0)
+
+    if not deadline_str or not open_chat_url:
+        return jsonify({"result": "fail", "msg": "필수 데이터가 누락되었습니다."}), 400
+
+    try:
+        deadline_date = datetime.strptime(deadline_str, '%Y-%m-%d')
+    except ValueError:
+        return jsonify({"result": "fail", "msg": "잘못된 날짜 형식입니다."}), 400
+
+    # TODO: 나중에는 session['user_id'] 등을 통해 실제 로그인 유저를 가져와야
+    # TODO: todo....... user > users 컬렉션으로 변경되었음
+    author_user = db.user.find_one({"name": "메타몽"})
+
+    if not author_user:
+        return jsonify({"result": "fail", "msg": "테스트 유저(메타몽)가 DB에 없습니다."}), 500
+
+    # [최종 DB 입력용 데이터 조립]
+    now = datetime.now()
+    new_group_buy = {
+        "groupBuyNumber": now.strftime("%Y%m%d%H%M%S"),  # 임시로 현재시간 기반 번호 생성
+        "author": {
+            "userId": author_user["_id"],
+            "name": author_user["name"],
+            "class": author_user.get("class", ""),
+            "generation": author_user.get("generation", 0)
+        },
+        "targetAmount": 30000,  # 다이소 무료배송 고정값
+        "currentAmount": total_amount,  # 현재는 0 (경로 B)
+        "deadline": deadline_date,  # Date 객체!
+        "status": "open",
+        "openChatUrl": open_chat_url,
+        "createdAt": now,
+        "updatedAt": now,
+        "orders": orders  # 현재는 빈 배열 [] (경로 B)
     }
 
-    # 2. 'test_collection'이라는 임시 컬렉션에 데이터 1개 집어넣기 (insert_one)
-    result = db.test_collection.insert_one(test_data)
+    # DB에 밀어 넣기
+    result = db.group_buys.insert_one(new_group_buy)
 
-    # 3. 삽입 성공 후, 방금 넣은 데이터의 고유 ID를 화면에 보여주기
+    # [응답] 프론트엔드가 기다리는 'inserted_id'를 반드시 문자열로 변환해서 줘야 합니다.
+    # JS의 window.location.href = `/group-buy/${result.inserted_id}`; 가 작동하게 됨!
     return jsonify({
-        "status": "success",
-        "message": "MongoDB Atlas 연결 및 데이터 삽입 완벽 성공!",
-        "inserted_id": str(result.inserted_id)  # ObjectId를 문자로 변환해서 반환
+        "result": "success",
+        "inserted_id": str(result.inserted_id)
     })
 
 
