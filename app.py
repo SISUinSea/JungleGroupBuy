@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, session
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'jungle'
@@ -10,7 +11,20 @@ db = client.jungle_groupbuy
 # =====================================================================
 # 🚧 [영역 1]
 # =====================================================================
+@app.route('/signup', methods=['POST'])
+def signup():
+    username = request.form['username']
+    password = request.form['password']
+    name = request.form['name']
+    email = request.form['slack_email']
+    generation = request.form['generation']
+    class_number = request.form['class_number']
+    createdAt = datetime.now()
 
+    user_info = {'username': username, 'password': password, 'name': name, 'email': email, 'generation': generation, 'class_number': class_number, 'createdAt': createdAt}
+    db.users.insert_one(user_info)
+
+    return redirect('/login')
 
 # =====================================================================
 # 🚧 [영역 2]
