@@ -399,10 +399,12 @@ app.json.ensure_ascii = False
 def getProductDetail(productId):
     productInfo = db.productInfo.find_one({'productId': productId})
     productInfo.pop('_id', None)
-    if productInfo:
+    if productInfo and datetime.now() <= productInfo.get('ttl', datetime.min):
         print("cached data is used!!!", productInfo.get("productName"))
-        return productInfo
-
+        productInfo['ttl'] = productInfo['ttl'].isoformat()
+        return jsonify(productInfo)
+    else:
+        print("cache expired.... new request")
 
     headers = {
         'authority': 'fapi.daisomall.co.kr',
@@ -446,11 +448,17 @@ def getProductDetail(productId):
             "productName": data.get('exhPdNm') or data.get('pdNm'),
             "price": data.get('pdPrc'),
             "imageUrl": f"https://www.daisomall.co.kr{data.get('imgUrl')}" if data.get('imgUrl') else None,
-            "status": "success"
+            "status": "success",
+            "ttl": datetime.now() + timedelta(hours=24)
         }
 
-        db.productInfo.insert_one(product_info)
+        # 없으면 새로 만들되 있으면 기존의 productId에 덮어쓰기!!
+        db.productInfo.update_one(
+            {"productId": productId},
+            {"$set": product_info}, upsert=True)
 
+
+        product_info['ttl'] = product_info['ttl'].isoformat()
         return jsonify(product_info)
 
     except Exception as e:
