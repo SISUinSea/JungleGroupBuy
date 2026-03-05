@@ -93,6 +93,7 @@ def logout():
 # =====================================================================
 # 🚧 [영역 3]
 # =====================================================================
+<<<<<<< HEAD
 @app.route('/api/user/me', methods=['GET', 'POST']) #마이페이지 정보 수집
 def user_me():
     user_id=session.get('username')
@@ -102,6 +103,19 @@ def user_me():
     if request.method == 'GET':
         return render_template('password_confirm.html')
     
+=======
+@app.route('/mypage', methods=['GET'])
+@login_required
+def user_me():
+    user_id = session.get('username')
+
+    if user_id:
+        user_info = db.users.find_one(
+            {'username': user_id},
+            {'password': 0}
+        )
+        return render_template('mypage.html', user_info=user_info)
+>>>>>>> b23f32c12a311f384b26baa18a9eb796901ffce6
     else:
         password_receive=request.form['password_give']
         user=db.users.find_one({'username':user_id})
@@ -112,11 +126,17 @@ def user_me():
         else:
             return "<script>alert('비밀번호가 일치하지 않습니다.'); history.back();</script>"
 
+<<<<<<< HEAD
 
 @app.route('/api/user/update', methods=['POST']) #정보수정(이름, 반, 기수)
+=======
+@app.route('/update', methods=['POST'])
+>>>>>>> b23f32c12a311f384b26baa18a9eb796901ffce6
 def user_update():
     user_id=session.get('username')
+
     if not user_id:
+<<<<<<< HEAD
         return redirect('/api/login')
     
     name=request.form.get('name','').strip()
@@ -134,6 +154,35 @@ def user_update():
     }})
     
     return "<script>alert('수정이 완료되었습니다!'); window.location.href='/api/user/me';</script>"
+=======
+        return redirect('/login')
+
+    name=request.form.get('name','').strip()
+    class_number=request.form.get('class_number','').strip()
+    generation=request.form.get('generation','').strip()
+
+    print(request.form)
+    print("SESSION USER:", user_id)
+    print("SESSION:", session)
+    
+    if not name or not class_number or not generation:
+        return "<script>alert('모든 필드를 입력해주세요.'); history.back();</script>"
+
+    result = db.users.update_one(
+        {'username': user_id},
+        {'$set': {
+            'name': name,
+            'class_number': class_number,
+            'generation': generation
+        }}
+    )
+
+    print("MATCHED:", result.matched_count)
+    print("MODIFIED:", result.modified_count)
+    if result.matched_count == 0:
+        return "<script>alert('사용자를 찾을 수 없습니다'); location.href='/mypage';</script>"
+    return "<script>alert('수정 완료'); location.href='/mypage';</script>"
+>>>>>>> b23f32c12a311f384b26baa18a9eb796901ffce6
 
     
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
