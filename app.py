@@ -93,24 +93,27 @@ def logout():
 # =====================================================================
 # 🚧 [영역 3]
 # =====================================================================
-<<<<<<< HEAD
-@app.route('/mypage', methods=['GET'])
+@app.route('/mypage', methods=['GET', 'POST']) # 1. POST 추가
 @login_required
 def user_me():
     user_id = session.get('username')
+    if not user_id:
+        return redirect('/login')
 
-    if user_id:
-        user_info = db.users.find_one(
-            {'username': user_id},
-            {'password': 0}
-        )
-        return render_template('mypage.html', user_info=user_info)
+    # 처음 접속했을 때 (GET): 비밀번호 입력창 보여주기
+    if request.method == 'GET':
+        user_info = db.users.find_one({'username': user_id}, {'password': 0})
+        return render_template('password_confirm.html', user_info=user_info)
+
+    # 비밀번호 입력 후 [확인] 눌렀을 때 (POST): 비밀번호 검증
     else:
-        password_receive=request.form['password_give']
-        user=db.users.find_one({'username':user_id})
-        hashed_password=user.get('hashed_password')
-        if hashed_password and bcrypt.checkpw(password_receive.encode('uft-8'), hashed_password):
-            user_info=db.users.find_one({'username':user_id}, {'hashed_password': 0})
+        password_receive = request.form['password_give']
+        user = db.users.find_one({'username': user_id})
+        db_password = user.get('password')
+
+        # 3. utf-8 오타 수정
+        if db_password and bcrypt.checkpw(password_receive.encode('utf-8'), db_password.encode('utf-8')):
+            user_info = db.users.find_one({'username': user_id}, {'password': 0})
             return render_template('mypage.html', user_info=user_info)
         else:
             return "<script>alert('비밀번호가 일치하지 않습니다.'); history.back();</script>"
@@ -147,10 +150,6 @@ def user_update():
     if result.matched_count == 0:
         return "<script>alert('사용자를 찾을 수 없습니다'); location.href='/mypage';</script>"
     return "<script>alert('수정 완료'); location.href='/mypage';</script>"
-=======
-
->>>>>>> 0fdca7a938444a2b5a194f63dcc6b3ddf83564f7
-
     
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
