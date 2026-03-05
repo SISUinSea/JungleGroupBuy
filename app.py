@@ -2,7 +2,7 @@ import pymongo
 from flask import Flask, render_template, request, jsonify, redirect, session, flash
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt # 비밀번호 암호화 라이브러리
 from functools import wraps     # 로그인 상태 체크 데코레이터
 import re
