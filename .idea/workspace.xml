@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: 공동구매의 주문 삭제 기능 추가">
+    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: 주문 삭제 조건 변경">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/groupBuyDetail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/groupBuyDetail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +20,17 @@
         <option value="HTML File" />
         <option value="Python Script" />
       </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
     </option>
   </component>
   <component name="Git.Settings">
@@ -102,6 +113,7 @@
       <workItem from="1772683344094" duration="5832000" />
       <workItem from="1772690662935" duration="593000" />
       <workItem from="1772705438408" duration="2794000" />
+      <workItem from="1772714620381" duration="3072000" />
     </task>
     <task id="LOCAL-00001" summary="inital commit">
       <option name="closed" value="true" />
@@ -191,7 +203,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772701090337</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="feat: 주문 삭제 조건 변경">
+      <option name="closed" value="true" />
+      <created>1772713944704</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1772713944704</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -218,7 +238,8 @@
     <MESSAGE value="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌" />
     <MESSAGE value="feat: 다이소 상품이 DB에 없을 때 발생하는 오류 원인 로직 수정" />
     <MESSAGE value="feat: 공동구매의 주문 삭제 기능 추가" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: 공동구매의 주문 삭제 기능 추가" />
+    <MESSAGE value="feat: 주문 삭제 조건 변경" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 주문 삭제 조건 변경" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JungleGroupBuy$JungleGroupBuy.coverage" NAME="JungleGroupBuy 커버리지 결과" MODIFIED="1772623547147" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />

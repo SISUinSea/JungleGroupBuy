@@ -19,78 +19,65 @@
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
             <div class="flex justify-between items-start mb-6">
 
-                {# 상태 배지 #}
-                {% set st = product.status %}
-                {% if st == 'open' %}
-                <span class="px-4 py-1.5 bg-green-100 text-green-600 rounded-full text-sm font-bold">
-                    모집중
-                </span>
-                {% elif st == 'closed' %}
-                <span class="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-full text-sm font-bold">
-                    마감
-                </span>
-                {% elif st == 'hidden' %}
-                <span class="px-4 py-1.5 bg-zinc-100 text-zinc-600 rounded-full text-sm font-bold">
-                    숨김
-                </span>
-                {% elif st == 'purchased' %}
-                <span class="px-4 py-1.5 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">
-                    구매완료
-                </span>
-                {% elif st == 'delivered' %}
-                <span class="px-4 py-1.5 bg-purple-100 text-purple-600 rounded-full text-sm font-bold">
-                    배송완료
-                </span>
-                {% else %}
-                <span class="px-4 py-1.5 bg-red-100 text-red-600 rounded-full text-sm font-bold">
-                    {{ st }}
-                </span>
-                {% endif %}
+                <!-- 상태 및 공동구매 번호 -->
+                <div class="flex flex-col gap-3">
+                    <div>
+                        {# 상태 배지 #}
+                        {% set st = product.status %}
+                        {% if st == 'open' %}
+                        <span class="px-4 py-1.5 bg-green-100 text-green-600 rounded-full text-sm font-bold">모집중</span>
+                        {% elif st == 'closed' %}
+                        <span class="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-full text-sm font-bold">마감</span>
+                        {% elif st == 'hidden' %}
+                        <span class="px-4 py-1.5 bg-zinc-100 text-zinc-600 rounded-full text-sm font-bold">숨김</span>
+                        {% elif st == 'purchased' %}
+                        <span class="px-4 py-1.5 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">구매완료</span>
+                        {% elif st == 'delivered' %}
+                        <span class="px-4 py-1.5 bg-purple-100 text-purple-600 rounded-full text-sm font-bold">배송완료</span>
+                        {% else %}
+                        <span class="px-4 py-1.5 bg-red-100 text-red-600 rounded-full text-sm font-bold">{{ st }}</span>
+                        {% endif %}
+                    </div>
 
-                {# ✅ 작성자만 상태 변경 UI 노출 #}
-                {% if is_author %}
-                <div id="gb-status-wrap" class="flex items-center gap-2">
-                    <select id="gb-status-select" class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-gray-700
-               focus:ring-2 focus:ring-blue-400 outline-none">
-                    </select>
-
-                    <button id="gb-status-btn" onclick="changeGroupBuyStatus('{{ product._id }}')"
-                        class="text-sm bg-gray-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-black transition active:scale-95">
-                        상태 변경
-                    </button>
+                    <div class="flex items-center gap-2 mt-1">
+{#                        <span class="text-xs font-extrabold text-gray-400 tracking-wide">공동구매 번호</span>#}
+                        <span class="text-lg font-black text-gray-800">#{{ product.groupBuyNumber }}</span>
+                    </div>
                 </div>
-                {% endif %}
 
-                <!--수정삭제버튼-->
-                {% if is_author %}
-                <div><button id="groupBuy_modify_mode_btn" onclick="groupBuy_modify_mode()" class="px-4 py-1.5 bg-blue-100 text-gray-600 rounded-full text-sm font-bold">
-                수정
-                </button>                
-                <button id="groupBuy_delete_btn" onclick="groupBuy_delete('{{ product._id }}')" class="px-4 py-1.5 bg-red-100 text-gray-600 rounded-full text-sm font-bold">
-                삭제
-                </button>
-                <button id="groupBuy_modify_btn" onclick="groupBuy_modify('{{ product._id }}')" class="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-full text-sm font-bold hidden">
-                확인
-                </button> 
+                <!-- 우측: 작성자용 컨트롤 패널 -->
+                <div class="flex flex-col items-end gap-3">
+                    {% if is_author %}
+                    <div id="gb-status-wrap" class="flex items-center gap-2">
+                        <select id="gb-status-select" class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-blue-400 outline-none">
+                        </select>
+                        <button id="gb-status-btn" onclick="changeGroupBuyStatus('{{ product._id|string }}')"
+                            class="text-sm bg-gray-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-black transition active:scale-95">
+                            상태 변경
+                        </button>
+                    </div>
+
+                    <!-- 수정/삭제 버튼 -->
+                    <div class="flex gap-2">
+                        <button id="groupBuy_modify_mode_btn" onclick="groupBuy_modify_mode()" class="px-4 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-full text-xs font-bold transition">수정</button>
+                        <button id="groupBuy_delete_btn" onclick="groupBuy_delete('{{ product._id|string }}')" class="px-4 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-full text-xs font-bold transition">삭제</button>
+                        <button id="groupBuy_modify_btn" onclick="groupBuy_modify('{{ product._id|string }}')" class="px-4 py-1.5 bg-gray-800 text-white rounded-full text-xs font-bold hidden transition">확인</button>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
-
             </div>
 
-            <div class="grid grid-cols-2 gap-8">
+            <div class="grid grid-cols-2 gap-8 border-t border-gray-100 pt-6">
                 <div>
                     <h2 class="text-sm font-bold text-gray-400 mb-1">마감일</h2>
-                    <p class="text-lg font-semibold text-gray-700">{{ product.deadline.strftime('%Y. %m. %d.') if
-                        product.deadline else '-' }}</p>
+                    <p class="text-lg font-semibold text-gray-700">{{ product.deadline.strftime('%Y. %m. %d.') if product.deadline else '-' }}</p>
                 </div>
                 <div>
                     <h2 class="text-sm font-bold text-gray-400 mb-1">오픈채팅 링크</h2>
-                    <a id = "openChatUrl" href="{{ product.openChatUrl }}" target="_blank"
-                        class="text-blue-500 hover:underline font-medium break-all">
+                    <a id="openChatUrl" href="{{ product.openChatUrl }}" target="_blank" class="text-blue-500 hover:underline font-medium break-all">
                         {{ product.openChatUrl }}
                     </a>
-                    <input id="openChatUrl_modify_input" type="text" name="openChatUrl_modify_input" value = "{{ product.openChatUrl }}" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 hidden" required/>
-                    
+                    <input id="openChatUrl_modify_input" type="text" name="openChatUrl_modify_input" value="{{ product.openChatUrl }}" class="w-full rounded-xl bg-gray-50 px-4 py-2 text-sm text-gray-900 border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none hidden transition" required/>
                 </div>
             </div>
         </div>
@@ -114,69 +101,43 @@
                         <tr class="hover:bg-gray-50/50 transition">
                             <td class="px-6 py-5">
                                 <div class="font-bold text-gray-800">{{ order.user.name }}</div>
-                                <div class="text-xs text-gray-400">{{ order.user.class }} | {{ order.user.generation }}기
-                                </div>
+                                <div class="text-xs text-gray-400">{{ order.user.class }} | {{ order.user.generation }}기</div>
                             </td>
                             <td class="px-6 py-5 font-semibold text-gray-700">
                                 {{ "{:,}".format(order.totalAmount) }}
                             </td>
                             <td class="px-6 py-5 text-center">
-                                {# ✅ 내가 만든 공구에서, 작성자(나)가 넣은 주문이면 상태 대신 "나의 주문"만 #}
                                 {% if is_author and order.user.userId == product.author.userId %}
-                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-gray-900 text-white">
-                                    나의 주문
-                                </span>
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-gray-900 text-white">나의 주문</span>
                                 {% else %}
-                                {# 기존 pending/paid/confirmed 상태 표시 로직 그대로 #}
+                                    {% if order.status == 'pending' %}
+                                    <span class="px-3 py-1 rounded-lg text-xs font-bold bg-yellow-100 text-yellow-600">입금 대기</span>
+                                    {% if current_user_id and order.user.userId == current_user_id %}
+                                    <button onclick="changeStatus('{{ product._id|string }}','{{ order._id|string }}','paid')" class="ml-2 text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition">입금 완료</button>
+                                    {% endif %}
 
-                                {% if order.status == 'pending' %}
-                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-yellow-100 text-yellow-600">
-                                    입금 대기
-                                </span>
+                                    {% elif order.status == 'paid' %}
+                                    <span class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-600">입금 완료</span>
+                                    {% if current_user_id and product.author.userId == current_user_id %}
+                                    <button onclick="changeStatus('{{ product._id|string }}','{{ order._id|string }}','confirmed')" class="ml-2 text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded transition">입금 확인</button>
+                                    {% endif %}
 
-                                {% if current_user_id and order.user.userId == current_user_id %}
-                                <button onclick="changeStatus('{{ product._id }}','{{ order._id }}','paid')"
-                                    class="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded">
-                                    입금 완료
-                                </button>
-                                {% endif %}
-
-                                {% elif order.status == 'paid' %}
-                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-600">
-                                    입금 완료
-                                </span>
-
-                                {% if current_user_id and product.author.userId == current_user_id %}
-                                <button onclick="changeStatus('{{ product._id }}','{{ order._id }}','confirmed')"
-                                    class="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
-                                    입금 확인
-                                </button>
-                                {% endif %}
-
-                                {% elif order.status == 'confirmed' %}
-                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-green-100 text-green-600">
-                                    입금 확인
-                                </span>
-                                {% endif %}
-
+                                    {% elif order.status == 'confirmed' %}
+                                    <span class="px-3 py-1 rounded-lg text-xs font-bold bg-green-100 text-green-600">입금 확인</span>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                             <td class="px-6 py-5 text-right">
-                                <button onclick="deleteOrder('{{ product._id|string }}', '{{ order._id|string }}')"
-                                    class="text-gray-300 hover:text-red-500 transition">삭제</button>
+                                <button onclick="deleteOrder('{{ product._id|string }}', '{{ order._id|string }}')" class="text-gray-300 hover:text-red-500 transition font-bold text-sm">삭제</button>
                             </td>
                         </tr>
                         <tr class="bg-gray-50/30">
                             <td colspan="4" class="px-6 py-3">
                                 <div class="space-y-2 border-l-2 border-gray-200 ml-2 pl-4">
-                                    {# 중요: order.items 대신 order['items']를 사용합니다 items가 키워드여서 못써요!!! #}
                                     {% for item in order['items'] %}
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600">
-                                            <a href="{{ item.productUrl }}" target="_blank"
-                                                class="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors duration-200">
-                                                {{ item.productName }}
-                                            </a>
+                                            <a href="{{ item.productUrl }}" target="_blank" class="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors duration-200"> {{ item.productName }} </a>
                                             <span class="text-gray-400 ml-2">{{ item.quantity }}개</span>
                                         </span>
                                         <span class="font-mono text-gray-500">{{ "{:,}".format(item.price) }}원</span>
@@ -192,18 +153,9 @@
         </div>
     </div>
 
-    <!-- 주문 위젯 -->
+    <!-- 🛒 주문 위젯 -->
     <div class="lg:sticky lg:top-8">
         <div class="bg-gray-200 rounded-3xl p-6 shadow-inner">
-            <!-- ✅ 주문번호 추가 -->
-            <div class="mb-2 flex items-center justify-between">
-                <div class="text-[11px] font-extrabold text-gray-500 tracking-wide">
-                    주문번호
-                </div>
-                <div class="text-[11px] font-black text-gray-700">
-                    #{{ product.groupBuyNumber }}
-                </div>
-            </div>
             <div class="flex justify-between items-end mb-3">
                 <div class="text-xs font-black text-gray-500">Current Progress</div>
                 <div class="text-sm font-bold text-gray-800">
@@ -212,109 +164,66 @@
             </div>
 
             <div class="w-full bg-white/50 h-3 rounded-full mb-8 overflow-hidden">
-                {% set progress_raw = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0
-                else 0 %}
-                {% set progress_pct = (progress_raw if progress_raw <= 100 else 100) | round(2) %} <div
-                    class="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                    style="width: {{ progress_pct }}%;">
+                {% set progress_raw = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0 else 0 %}
+                {% set progress_pct = (progress_raw if progress_raw <= 100 else 100) | round(2) %}
+                <div class="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style="width: {{ progress_pct }}%;"></div>
             </div>
-        </div>
 
-        {% set can_order = (product.status == 'open') %}
-        {% if not can_order %}
-        <div class="mb-6 p-4 rounded-2xl bg-white border border-gray-200 text-sm text-gray-600">
-            <span class="font-bold">현재 상태( {{ status_label }} )</span>에서는 신청/주문이 불가능합니다.
-        </div>
-        {% endif %}
-
-        <!-- 2. 임시 장바구니 리스트가 보일 구역 -->
-        <div class="mb-8">
-            <p id="empty-msg" class="text-center text-gray-500 py-10">주문할 물품을 추가해주세요.</p>
-            <div id="order-list" class="space-y-4">
-                <!-- 여기에 추가한 아이템들이 자바스크립트로 그려집니다 -->
+            {% set can_order = (product.status == 'open') %}
+            {% if not can_order %}
+            <div class="mb-6 p-4 rounded-2xl bg-white border border-gray-200 text-sm text-gray-600 shadow-sm">
+                <span class="font-bold text-red-500">현재 상태( {{ status_label }} )</span>에서는 신청/주문이 불가능합니다.
             </div>
-        </div>
+            {% endif %}
 
-        <!-- 3. 입력창 구역 (가독성 개선 버전) -->
-        <div class="space-y-4">
-            <!-- URL -->
-            <div>
-                <label for="input-url" class="block text-xs font-extrabold text-gray-700 mb-2">
-                    다이소 상품 URL
-                </label>
+            <!-- 장바구니 리스트 -->
+            <div class="mb-8">
+                <p id="empty-msg" class="text-center text-gray-500 py-10">주문할 물품을 추가해주세요.</p>
+                <div id="order-list" class="space-y-4"></div>
+            </div>
 
-                <div class="relative">
-                    <input type="text" id="input-url" placeholder="예) https://www.daisomall.co.kr/.....pdNo=123456"
-                        class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
-                       border border-gray-300 shadow-sm
-                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
-                       transition" oninput="handleUrlInput(this.value)" {% if not can_order %} disabled {% endif %}>
-                    <div id="url-loader" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
-                        <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full">
+            <!-- 입력창 구역 -->
+            <div class="space-y-4">
+                <div>
+                    <label for="input-url" class="block text-xs font-extrabold text-gray-700 mb-2">다이소 상품 URL</label>
+                    <div class="relative">
+                        <input type="text" id="input-url" placeholder="예) https://www.daisomall.co.kr/.....pdNo=123456"
+                            class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition"
+                            oninput="handleUrlInput(this.value)" {% if not can_order %} disabled {% endif %}>
+                        <div id="url-loader" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                            <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
                         </div>
                     </div>
+                    <p class="mt-2 text-[11px] text-gray-500">URL을 붙여넣으면 상품명/가격이 자동 입력됩니다.</p>
                 </div>
 
-                <p class="mt-2 text-[11px] text-gray-500">
-                    URL을 붙여넣으면 상품명/가격이 자동 입력됩니다.
-                </p>
-            </div>
-
-            <!-- 상세 입력 -->
-            <div class="grid grid-cols-12 gap-2">
-                <div class="col-span-12">
-                    <label for="input-name" class="block text-xs font-extrabold text-gray-700 mb-2">
-                        물품명
-                    </label>
-                    <input type="text" id="input-name" placeholder="예) 물티슈, 수세미..." class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
-                       border border-gray-300 shadow-sm
-                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
-                       transition" {% if not can_order %} disabled {% endif %}>
-                </div>
-
-                <div class="col-span-5">
-                    <label for="input-qty" class="block text-xs font-extrabold text-gray-700 mb-2">
-                        개수
-                    </label>
-                    <input type="number" id="input-qty" placeholder="1" value="1" min="1" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
-                       border border-gray-300 shadow-sm
-                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
-                       transition" {% if not can_order %} disabled {% endif %}>
-                </div>
-
-                <div class="col-span-7">
-                    <label for="input-price" class="block text-xs font-extrabold text-gray-700 mb-2">
-                        가격 (원)
-                    </label>
-                    <input type="number" id="input-price" placeholder="예) 3000" min="0" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
-                       border border-gray-300 shadow-sm
-                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
-                       transition" {% if not can_order %} disabled {% endif %}>
-                </div>
-
-                <div class="col-span-12">
-                    <button onclick="addItem()" class="w-full bg-white border border-gray-300 text-gray-800 py-2.5 rounded-xl font-bold text-sm
-           hover:bg-gray-50 transition active:scale-[0.99]
-           disabled:opacity-50 disabled:cursor-not-allowed
-           mb-3" {% if not can_order %} disabled {% endif %}>
-                        + 장바구니에 추가
-                    </button>
+                <div class="grid grid-cols-12 gap-2">
+                    <div class="col-span-12">
+                        <label for="input-name" class="block text-xs font-extrabold text-gray-700 mb-2">물품명</label>
+                        <input type="text" id="input-name" placeholder="예) 물티슈, 수세미..." class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition" {% if not can_order %} disabled {% endif %}>
+                    </div>
+                    <div class="col-span-5">
+                        <label for="input-qty" class="block text-xs font-extrabold text-gray-700 mb-2">개수</label>
+                        <input type="number" id="input-qty" placeholder="1" value="1" min="1" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition" {% if not can_order %} disabled {% endif %}>
+                    </div>
+                    <div class="col-span-7">
+                        <label for="input-price" class="block text-xs font-extrabold text-gray-700 mb-2">가격 (원)</label>
+                        <input type="number" id="input-price" placeholder="예) 3000" min="0" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition" {% if not can_order %} disabled {% endif %}>
+                    </div>
+                    <div class="col-span-12 mt-2">
+                        <button onclick="addItem()" class="w-full bg-white border border-gray-300 text-gray-800 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed mb-3" {% if not can_order %} disabled {% endif %}>
+                            + 장바구니에 추가
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <button onclick="sendToServer()" class="w-full bg-gray-800 text-white py-4 rounded-2xl font-extrabold text-lg hover:bg-black transition shadow-sm {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}" {% if not can_order %} disabled {% endif %}>
+                주문 제출하기
+            </button>
         </div>
-
-
-        <button onclick="sendToServer()" class="w-full bg-gray-800 text-white py-2.5 rounded-xl font-extrabold text-sm
-           hover:bg-black transition shadow-sm
-           {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}" {% if not can_order %} disabled {% endif
-            %}>
-            주문 추가하기
-        </button>
     </div>
 </div>
-</div>
-
-
 
 <script>
     let myItems = []
@@ -322,18 +231,10 @@
     const CAN_ORDER = {{ 'true' if product.status == 'open' else 'false' }};
     const CURRENT_STATUS_LABEL = "{{ status_label }}";
 
-    // 상태전이
     const ALLOWED_STATUS_TRANSITIONS = {
-        open: [
-            { value: "closed", label: "마감" },
-            { value: "hidden", label: "숨김" },
-        ],
-        closed: [
-            { value: "purchased", label: "구매완료" },
-        ],
-        purchased: [
-            { value: "delivered", label: "배송완료" },
-        ],
+        open: [{ value: "closed", label: "마감" }, { value: "hidden", label: "숨김" }],
+        closed: [{ value: "purchased", label: "구매완료" }],
+        purchased: [{ value: "delivered", label: "배송완료" }],
         delivered: [],
         hidden: [],
     };
@@ -344,60 +245,34 @@
         const wrap = document.getElementById("gb-status-wrap");
         const sel = document.getElementById("gb-status-select");
         const btn = document.getElementById("gb-status-btn");
-
-        // 작성자 UI가 없는 경우(비작성자)면 그냥 종료
         if (!wrap || !sel || !btn) return;
 
         const options = ALLOWED_STATUS_TRANSITIONS[CURRENT_GROUPBUY_STATUS] || [];
-
-        // 갈 수 있는 상태가 없으면 UI 비활성화 (혹은 숨김)
         if (options.length === 0) {
             wrap.classList.add("hidden");
             return;
-
-            // 2) 숨기지 않고 비활성화하고 싶으면 아래처럼:
-            // sel.innerHTML = `<option>변경 불가</option>`;
-            // sel.disabled = true;
-            // btn.disabled = true;
-            // btn.classList.add("opacity-50", "cursor-not-allowed");
-            // return;
         }
-
         sel.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     }
 
     function addItem() {
-        if (!CAN_ORDER) {
-            alert(`현재 상태(${CURRENT_STATUS_LABEL})에서는 신청/주문이 불가능합니다.`);
-            return;
-        }
+        if (!CAN_ORDER) { alert(`현재 상태(${CURRENT_STATUS_LABEL})에서는 신청이 불가능합니다.`); return; }
 
         let name = document.getElementById("input-name").value;
         let qty = parseInt(document.getElementById("input-qty").value);
         let price = parseInt(document.getElementById("input-price").value);
         let url = document.getElementById("input-url").value;
 
-        if (!name || !qty || !price || !url) {
-            alert('물품명, 개수, 가격, 상품url을 올바르게 입력해주세요');
-            return;
-        }
+        if (!name || !qty || !price || !url) { alert('항목을 올바르게 입력해주세요.'); return; }
 
-        const newItem = {
-            productName: name,
-            quantity: qty,
-            price: price,
-            subTotal: qty * price,
-            productUrl: url
-        }
-
-        myItems.push(newItem);
+        myItems.push({ productName: name, quantity: qty, price: price, subTotal: qty * price, productUrl: url });
         renderList();
 
         document.getElementById("input-name").value = '';
-        document.getElementById("input-qty").value = '';
+        document.getElementById("input-qty").value = '1';
         document.getElementById("input-price").value = '';
         document.getElementById("input-url").value = '';
-        document.getElementById("input-name").focus();
+        document.getElementById("input-url").focus();
     }
 
     function removeItem(index) {
@@ -409,12 +284,7 @@
         const listDiv = document.getElementById('order-list');
         const emptyMsg = document.getElementById('empty-msg');
 
-        if (myItems.length > 0) {
-            emptyMsg.style.display = 'none';
-        } else {
-            emptyMsg.style.display = 'block';
-        }
-
+        emptyMsg.style.display = myItems.length > 0 ? 'none' : 'block';
         listDiv.innerHTML = '';
 
         myItems.forEach((item, index) => {
@@ -432,155 +302,74 @@
     }
 
     async function sendToServer() {
-        if (!CAN_ORDER) {
-            alert(`현재 상태(${CURRENT_STATUS_LABEL})에서는 신청/주문이 불가능합니다.`);
-            return;
-        }
-
-        if (myItems.length === 0) {
-            alert("주문할 물품을 먼저 추가해주세요!");
-            return;
-        }
+        if (!CAN_ORDER) { alert(`현재 상태(${CURRENT_STATUS_LABEL})에서는 주문이 불가능합니다.`); return; }
+        if (myItems.length === 0) { alert("추가된 물품이 없습니다!"); return; }
 
         const totalAmount = myItems.reduce((sum, item) => sum + item.subTotal, 0);
-
         const response = await fetch('/api/order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                groupBuyId: '{{ product._id }}',
-                items: myItems,
-                totalAmount: totalAmount
-            })
+            body: JSON.stringify({ groupBuyId: '{{ product._id|string }}', items: myItems, totalAmount: totalAmount })
         });
 
         const result = await response.json();
-
-        if (result.result === 'success') {
-            window.location.reload();
-        } else {
-            alert("주문 실패: " + result.msg);
-        }
+        if (result.result === 'success') { window.location.reload(); }
+        else { alert("주문 실패: " + result.msg); }
     }
 
     async function changeStatus(groupBuyId, orderId, newStatus) {
-        const ok = confirm("정말 상태를 변경하시겠습니까?");
-        if (!ok) return;
-
+        if (!confirm("상태를 변경하시겠습니까?")) return;
         const res = await fetch('/api/order/status', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                groupBuyId: groupBuyId,
-                orderId: orderId,
-                status: newStatus
-            })
+            body: JSON.stringify({ groupBuyId, orderId, status: newStatus })
         });
-
-        const result = await res.json();
-
-        if (result.result === 'success') {
-            location.reload();
-        } else {
-            alert(result.msg);
-        }
+        if ((await res.json()).result === 'success') location.reload();
     }
 
-    // ✅ 게시글 상태 변경 (작성자 전용)
     async function changeGroupBuyStatus(groupBuyId) {
         const newStatus = document.getElementById("gb-status-select").value;
-
-        const ok = confirm("게시글 상태를 변경하시겠습니까?");
-        if (!ok) return;
-
+        if (!confirm("게시글 상태를 변경하시겠습니까?")) return;
         const res = await fetch('/api/group-buy/status', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                groupBuyId: groupBuyId,
-                status: newStatus
-            })
+            body: JSON.stringify({ groupBuyId, status: newStatus })
         });
-
-        const result = await res.json();
-        if (result.result === 'success') {
-            location.reload();
-        } else {
-            alert(result.msg);
-        }
+        if ((await res.json()).result === 'success') location.reload(); else alert((await res.json()).msg);
     }
 
     async function handleUrlInput(url) {
-        if (!CAN_ORDER) return;
-        if (!url.includes('daisomall.co.kr')) return;
-
+        if (!CAN_ORDER || !url.includes('daisomall.co.kr')) return;
         try {
-            const urlObj = new URL(url);
-            const pdNo = urlObj.searchParams.get('pdNo');
-
+            const pdNo = new URL(url).searchParams.get('pdNo');
             if (pdNo) {
                 document.getElementById('url-loader').classList.remove('hidden');
-
                 const response = await fetch(`/api/product-detail/${pdNo}`);
                 const result = await response.json();
-
                 if (result.status === 'success') {
                     document.getElementById('input-name').value = result.productName;
                     document.getElementById('input-price').value = result.price;
-
-                    document.getElementById('input-name').classList.add('ring-2', 'ring-green-400');
-                    document.getElementById('input-price').classList.add('ring-2', 'ring-green-400');
-                    setTimeout(() => {
-                        document.getElementById('input-name').classList.remove('ring-2', 'ring-green-400');
-                        document.getElementById('input-price').classList.remove('ring-2', 'ring-green-400');
-                    }, 1000);
                 }
             }
-        } catch (e) {
-            console.error("URL 파싱 에러", e);
-        } finally {
-            document.getElementById('url-loader').classList.remove('hidden');
-            document.getElementById('url-loader').classList.add('hidden');
-        }
+        } catch (e) {} finally { document.getElementById('url-loader').classList.add('hidden'); }
     }
 
-    async function deleteOrder(productId, orderId) {
+    async function deleteOrder(groupBuyId, orderId) {
         if (!confirm('정말로 이 주문을 삭제하시겠습니까?')) return;
-
         try {
-            const response = await fetch(`/api/group-buy/${productId}/order/${orderId}`, {
-                method: 'DELETE'
-            });
-
+            const response = await fetch(`/api/group-buy/${groupBuyId}/order/${orderId}`, { method: 'DELETE' });
             const result = await response.json();
-            if (result.result === 'success') {
-                alert(result.msg);
-                window.location.reload();
-            } else {
-                alert(result.msg);
-            }
-        } catch (e) {
-            alert("삭제 요청 중 오류가 발생했습니다.");
-            console.error(e);
-        }
+            if (result.result === 'success') { alert(result.msg); window.location.reload(); }
+            else { alert(result.msg); }
+        } catch (e) { alert("오류가 발생했습니다."); }
     }
 
     async function groupBuy_delete(groupbuyid) {
         if (!confirm("정말 삭제하시겠습니까?")) return;
-
-        const response = await fetch(`/group-buy/${groupbuyid}/delete`, {
-            method: "POST"
-        });
-
+        const response = await fetch(`/group-buy/${groupbuyid}/delete`, { method: "POST" });
         const data = await response.json();
-
-        if (data.result == "success") {
-            alert("공동구매 글이 삭제되었습니다.");
-            window.location.href = "/";
-        } else {
-            alert(data.message);
-            return;
-        }
+        if (data.result == "success") { alert("삭제되었습니다."); window.location.href = "/"; }
+        else { alert(data.message); }
     };
 
     function groupBuy_modify_mode() {
@@ -592,27 +381,16 @@
     }
 
     async function groupBuy_modify(groupbuyid) {
-        const newOpenChatUrl = document.getElementById("openChatUrl_modify_input").value
+        const newOpenChatUrl = document.getElementById("openChatUrl_modify_input").value;
         const response = await fetch(`/group-buy/${groupbuyid}/modify`, {
-            method: "POST",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({"newOpenChatUrl": newOpenChatUrl})
+            method: "POST", headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({"newOpenChatUrl": newOpenChatUrl})
         });
-
         const data = await response.json();
-
-        if (data.result == "success") {
-            alert("글이 수정되었습니다.");
-            location.reload();  
-        } else {
-            alert(data.message);
-            return;
-        }
+        if (data.result == "success") { alert("수정되었습니다."); location.reload(); }
+        else { alert(data.message); }
     };
 
-    // 페이지 로드 시 초기 렌더링
     renderList();
     renderGroupBuyStatusSelect();
 </script>
-
 {% endblock %}
