@@ -64,6 +64,12 @@
                     </button>
                 </div>
                 {% endif %}
+                
+                <!--수정삭제버튼-->
+                <button id="groupBuy_delete_btn" onclick="groupBuy_delete('{{ product._id }}')" class="px-4 py-1.5 bg-red-100 text-gray-600 rounded-full text-sm font-bold">
+                공동주문 삭제하기
+                </button>
+
             </div>
 
             <div class="grid grid-cols-2 gap-8">
@@ -186,7 +192,7 @@
             <div class="w-full bg-white/50 h-3 rounded-full mb-8 overflow-hidden">
                 {% set progress = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0 else 0 %}
                 <div class="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                    style="width: {{ progress if progress <= 100 else 100 }}%"></div>
+                    style="width: '{{ progress if progress <= 100 else 100 }}' ; "></div>
             </div>
 
             {% set can_order = (product.status == 'open') %}
@@ -236,6 +242,7 @@
                 </div>
             </div>
 
+
             <button onclick="sendToServer()"
                 class="w-full bg-gray-800 text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg
                 {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}"
@@ -245,6 +252,8 @@
         </div>
     </div>
 </div>
+
+
 
 <script>
     let myItems = []
@@ -450,6 +459,26 @@
             console.error(e);
         }
     }
+
+    async function groupBuy_delete(groupbuyid) {
+        if(!confirm("정말 삭제하시겠습니까?")) return;
+
+        const response = await fetch(`/group-buy/${groupbuyid}/delete`, {
+            method: "POST"
+        });
+
+        const data = await response.json();
+
+        if (data.result == "success") {
+            alert("공동구매 글이 삭제되었습니다.");
+            window.location.href = "/";    
+        } else {
+            alert(data.message);
+            return;
+        }
+    };
+
+
 
     // 페이지 로드 시 초기 렌더링
     renderList();

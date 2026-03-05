@@ -134,6 +134,33 @@ def username_duplicate_check():
     return jsonify({"isDuplicate": True if user else False})
 
 
+    if user:
+        is_duplicate = True
+    else:
+        is_duplicate = False
+    
+    return jsonify({
+        "isDuplicate": is_duplicate
+    })
+
+@app.route('/group-buy/<groupbuyid>/delete', methods=['POST'])
+def groupBy_delete(groupbuyid):
+    result = db.group_buys.find_one({'_id': ObjectId(groupbuyid)})
+
+    if result is None:
+        return jsonify({"result":"fail", "message": "게시글을 찾을 수 없습니다."}), 404
+
+    current_user_id = session.get("user_id")
+    author_id = str(result["author"]["userId"])
+
+    if author_id != current_user_id:
+        return jsonify({"result":"fail","message":"작성자만 삭제할 수 있습니다."})
+
+    db.group_buys.delete_one({'_id': ObjectId(groupbuyid)})
+    return jsonify({'result': 'success'})
+
+
+
 # =====================================================================
 # 🚧 [영역 2] 로그인/로그아웃
 # =====================================================================
