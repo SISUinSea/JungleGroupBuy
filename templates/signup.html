@@ -1,41 +1,8 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}정탐공{% endblock %}</title>
+{% extends 'layout.html' %}
 
-    <script src="https://cdn.tailwindcss.com"></script>
+{% block title%}정탐공 | 회원가입{% endblock %}
 
-    <script>
-        // 테일윈드 설정 객체
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        jungle: '#1d4ed8',
-                    }
-                }
-            }
-        }
-    </script>
-
-    
-</head>
-<body class="bg-gray-100 min-h-screen">
-    <!-- 상단 네비게이션 바 -->
-    <nav class="bg-white shadow-md">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-jungle">정탐공 🍎</a>
-            <div class="space-x-4">
-                <a href="/" class="text-gray-700 hover:text-jungle">홈</a>
-                <a href="/login" class="bg-jungle text-white px-4 py-2 rounded-lg hover:opacity-90">로그인</a>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-6xl mx-auto px-4 py-8">
-        {% block content %}
+{% block content %}
         <!-- form 부분 수정했습니다. method가 설정이 안되어서, 로그인 페이지로 리다이렉트 되지 않았습니다..ㅜㅜ -->
         <form action="/signup" method="POST">
             <div class="space-y-12">
@@ -136,14 +103,8 @@
                 <button type="submit" id="joinBtn" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">저장</button>
             </div>
         </form>
-        {% endblock %}
+    
     </main>
-
-    <footer class="text-center py-10 text-gray-400">
-        © 2026 Jungle Discovery Group Buy
-    </footer>
-
-
     <script>
         function cancel_form() {
             document.getElementById("username").value = "";
@@ -331,5 +292,5 @@
 
 
     </script>
-</body>
-</html>
+{% endblock %}
+
