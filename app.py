@@ -194,8 +194,7 @@ def user_me():
         user = db.users.find_one({'username': user_id})
         db_password = user.get('password')
 
-        # 3. utf-8 오타 수정
-        if db_password and bcrypt.checkpw(password_receive.encode('utf-8'), db_password.encode('utf-8')):
+        if db_password and bcrypt.check_password_hash(db_password, password_receive):
             user_info = db.users.find_one({'username': user_id}, {'password': 0})
             return render_template('mypage.html', user_info=user_info)
         else:
@@ -234,14 +233,14 @@ def user_update():
         return "<script>alert('사용자를 찾을 수 없습니다'); location.href='/mypage';</script>"
     return "<script>alert('수정 완료'); location.href='/mypage';</script>"
     
-# @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
-# def user_order():
-#     user_id=session.get('username')
-#     if user_id:
-#         user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
-#         return render_template('myorder.html', user_orders=user_orders)
-#     else:
-#         return redirect('/api/login')
+@app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
+def user_order():
+     user_id=session.get('username')
+     if user_id:
+         user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
+         return render_template('myorder.html', user_orders=user_orders)
+     else:
+         return redirect('/api/login')
 
 
 
