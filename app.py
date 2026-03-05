@@ -325,6 +325,12 @@ def user_order():
 @app.route('/', methods=['GET'])
 def getGroupBuyList():
     result_list = list(db.group_buys.find({}).sort("createdAt", pymongo.DESCENDING))
+    current_user_id = session.get('user_id')
+
+    for group in result_list:
+        group['is_author'] = current_user_id == str(group['author']["userId"])
+        group['is_participant'] = any(order['user']['userId'] == current_user_id for order in group['orders'])
+
 
     return render_template('groupBuyList.html', items=result_list)
 
