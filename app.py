@@ -282,6 +282,31 @@ def user_update():
         return "<script>alert('사용자를 찾을 수 없습니다'); location.href='/mypage';</script>"
     return "<script>alert('수정 완료'); location.href='/mypage';</script>"
     
+@app.route('/update/password', methods=['POST']) #비밀번호 변경
+def update_password():
+    user_id=session.get('username')
+    if not user_id:
+        return redirect('/login')
+    
+    new_password=request.form.get('new_password','').strip()
+    new_password_confirm=request.form.get('new_password_confirm','').strip()
+
+    if not new_password or not new_password_confirm:
+        return "<script>alert('모든 비밀번호 필드를 입력해주세요.'); history.back();</script>"
+    
+    if new_password != new_password_confirm:
+        return "<script>alert('비밀번호가 서로 일치하지 않습니다.'); history.back();</script>"
+    
+    hashed_new_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+    db.users.update_one(
+        {'username': user_id},
+        {'$set': {'password': hashed_new_password}}
+    )
+
+    return "<script>alert('비밀번호가 성공적으로 변경되었습니다.'); location.href='/mypage';</script>"
+    
+
+
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
      user_id=session.get('username')
