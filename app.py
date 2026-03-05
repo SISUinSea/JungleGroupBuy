@@ -249,7 +249,7 @@ def user_me():
         else:
             return "<script>alert('비밀번호가 일치하지 않습니다.'); history.back();</script>"
 
-@app.route('/update', methods=['POST'])
+@app.route('/update', methods=['POST']) #내정보 수정(이름, 반, 기수)
 def user_update():
     user_id=session.get('username')
 
@@ -306,16 +306,41 @@ def update_password():
     return "<script>alert('비밀번호가 성공적으로 변경되었습니다.'); location.href='/mypage';</script>"
     
 
-
-@app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
+@app.route('/api/user/order', methods=['GET']) #나의 주문
 def user_order():
-     user_id=session.get('username')
-     if user_id:
-         user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
-         return render_template('myorder.html', user_orders=user_orders)
-     else:
-         return redirect('/api/login')
+    user_id = session.get('username')
+    if not user_id:
+        return redirect('/api/login')
 
+    # 💡 수정 포인트: 'username' -> 'orders.user.username'
+    # '내가 방장인 것' + '내가 주문자로 참여한 것' 모두 보고 싶다면 $or를 씁니다.
+    query = {
+        '$or': [
+            {'name': user_id},             # 내가 방장인 경우
+            {'orders.user.name': user_id}  # 내가 주문자로 참여한 경우
+        ]
+    }
+
+    # 조건에 맞는 공동구매 목록을 마감일 순으로 10개 가져오기
+    user_orders = list(db.group_buys.find(query).sort('deadline', 1).limit(10))
+
+    return render_template('myorder.html', user_orders=user_orders)
+
+@app.route('/api/my/order', methods=['GET']) #나의 주문 목록
+@login_required
+def my_order():
+    user_id = session.get('username')
+
+    # orders 배열 내부의 user.username이 나인 게시글을 전부 찾습니다.
+    # 내가 주문을 1개를 했든 5개를 했든, 해당 '게시글'이 결과로 나옵니다.
+    my_orders = list(db.groupbuys.find(
+        {'orders.user.name': user_id}, 
+        {'_id': 0}
+    ))
+
+    # 중복 제거가 필요할 수도 있지만, find 쿼리 자체가 해당 문서(document)를 찾는 거라 
+    # 한 게시글에 내 주문이 여러 개 있어도 게시글은 한 번만 나옵니다.
+    return render_template('myorder.html', items=my_orders)
 
 
 # =====================================================================
