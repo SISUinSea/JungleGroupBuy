@@ -185,110 +185,123 @@
     <!-- 주문 위젯 -->
     <div class="lg:sticky lg:top-8">
         <div class="bg-gray-200 rounded-3xl p-6 shadow-inner">
+            <!-- ✅ 주문번호 추가 -->
+            <div class="mb-2 flex items-center justify-between">
+                <div class="text-[11px] font-extrabold text-gray-500 tracking-wide">
+                    주문번호
+                </div>
+                <div class="text-[11px] font-black text-gray-700">
+                    #{{ product.groupBuyNumber }}
+                </div>
+            </div>
             <div class="flex justify-between items-end mb-3">
                 <div class="text-xs font-black text-gray-500">Current Progress</div>
                 <div class="text-sm font-bold text-gray-800">
                     {{ "{:,}".format(product.currentAmount) }} / {{ "{:,}".format(product.targetAmount) }} 원
                 </div>
             </div>
+
             <div class="w-full bg-white/50 h-3 rounded-full mb-8 overflow-hidden">
-                {% set progress = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0 else
-                0 %}
-                <div class="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                    style="width: '{{ progress if progress <= 100 else 100 }}' ; "></div>
+                {% set progress_raw = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0
+                else 0 %}
+                {% set progress_pct = (progress_raw if progress_raw <= 100 else 100) | round(2) %} <div
+                    class="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                    style="width: {{ progress_pct }}%;">
             </div>
+        </div>
 
-            {% set can_order = (product.status == 'open') %}
-            {% if not can_order %}
-            <div class="mb-6 p-4 rounded-2xl bg-white border border-gray-200 text-sm text-gray-600">
-                <span class="font-bold">현재 상태( {{ status_label }} )</span>에서는 신청/주문이 불가능합니다.
+        {% set can_order = (product.status == 'open') %}
+        {% if not can_order %}
+        <div class="mb-6 p-4 rounded-2xl bg-white border border-gray-200 text-sm text-gray-600">
+            <span class="font-bold">현재 상태( {{ status_label }} )</span>에서는 신청/주문이 불가능합니다.
+        </div>
+        {% endif %}
+
+        <!-- 2. 임시 장바구니 리스트가 보일 구역 -->
+        <div class="mb-8">
+            <p id="empty-msg" class="text-center text-gray-500 py-10">주문할 물품을 추가해주세요.</p>
+            <div id="order-list" class="space-y-4">
+                <!-- 여기에 추가한 아이템들이 자바스크립트로 그려집니다 -->
             </div>
-            {% endif %}
+        </div>
 
-            <!-- 2. 임시 장바구니 리스트가 보일 구역 -->
-            <div class="mb-8">
-                <p id="empty-msg" class="text-center text-gray-500 py-10">주문할 물품을 추가해주세요.</p>
-                <div id="order-list" class="space-y-4">
-                    <!-- 여기에 추가한 아이템들이 자바스크립트로 그려집니다 -->
-                </div>
-            </div>
+        <!-- 3. 입력창 구역 (가독성 개선 버전) -->
+        <div class="space-y-4">
+            <!-- URL -->
+            <div>
+                <label for="input-url" class="block text-xs font-extrabold text-gray-700 mb-2">
+                    다이소 상품 URL
+                </label>
 
-            <!-- 3. 입력창 구역 (가독성 개선 버전) -->
-            <div class="space-y-4">
-                <!-- URL -->
-                <div>
-                    <label for="input-url" class="block text-xs font-extrabold text-gray-700 mb-2">
-                        다이소 상품 URL
-                    </label>
-
-                    <div class="relative">
-                        <input type="text" id="input-url" placeholder="예) https://www.daisomall.co.kr/.....pdNo=123456"
-                            class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                <div class="relative">
+                    <input type="text" id="input-url" placeholder="예) https://www.daisomall.co.kr/.....pdNo=123456"
+                        class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
                        border border-gray-300 shadow-sm
                        focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
                        transition" oninput="handleUrlInput(this.value)" {% if not can_order %} disabled {% endif %}>
-                        <div id="url-loader" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
-                            <div
-                                class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full">
-                            </div>
+                    <div id="url-loader" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                        <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full">
                         </div>
                     </div>
-
-                    <p class="mt-2 text-[11px] text-gray-500">
-                        URL을 붙여넣으면 상품명/가격이 자동 입력됩니다.
-                    </p>
                 </div>
 
-                <!-- 상세 입력 -->
-                <div class="grid grid-cols-12 gap-2">
-                    <div class="col-span-12">
-                        <label for="input-name" class="block text-xs font-extrabold text-gray-700 mb-2">
-                            물품명
-                        </label>
-                        <input type="text" id="input-name" placeholder="예) 물티슈, 수세미..." class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
-                       border border-gray-300 shadow-sm
-                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
-                       transition" {% if not can_order %} disabled {% endif %}>
-                    </div>
-
-                    <div class="col-span-5">
-                        <label for="input-qty" class="block text-xs font-extrabold text-gray-700 mb-2">
-                            개수
-                        </label>
-                        <input type="number" id="input-qty" placeholder="1" value="1" min="1" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
-                       border border-gray-300 shadow-sm
-                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
-                       transition" {% if not can_order %} disabled {% endif %}>
-                    </div>
-
-                    <div class="col-span-7">
-                        <label for="input-price" class="block text-xs font-extrabold text-gray-700 mb-2">
-                            가격 (원)
-                        </label>
-                        <input type="number" id="input-price" placeholder="예) 3000" min="0" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
-                       border border-gray-300 shadow-sm
-                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
-                       transition" {% if not can_order %} disabled {% endif %}>
-                    </div>
-
-                    <div class="col-span-12">
-                        <button onclick="addItem()" class="w-full bg-gray-900 text-white py-3 rounded-2xl font-extrabold
-                       hover:bg-black transition active:scale-[0.99]
-                       disabled:opacity-50 disabled:cursor-not-allowed" {% if not can_order %} disabled {% endif %}>
-                            + 목록에 추가
-                        </button>
-                    </div>
-                </div>
+                <p class="mt-2 text-[11px] text-gray-500">
+                    URL을 붙여넣으면 상품명/가격이 자동 입력됩니다.
+                </p>
             </div>
 
+            <!-- 상세 입력 -->
+            <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-12">
+                    <label for="input-name" class="block text-xs font-extrabold text-gray-700 mb-2">
+                        물품명
+                    </label>
+                    <input type="text" id="input-name" placeholder="예) 물티슈, 수세미..." class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                       border border-gray-300 shadow-sm
+                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
+                       transition" {% if not can_order %} disabled {% endif %}>
+                </div>
 
-            <button onclick="sendToServer()" class="w-full bg-gray-800 text-white py-3 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg
-                {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}" {% if not can_order %} disabled {%
-                endif %}>
-                추가 주문하기
-            </button>
+                <div class="col-span-5">
+                    <label for="input-qty" class="block text-xs font-extrabold text-gray-700 mb-2">
+                        개수
+                    </label>
+                    <input type="number" id="input-qty" placeholder="1" value="1" min="1" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                       border border-gray-300 shadow-sm
+                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
+                       transition" {% if not can_order %} disabled {% endif %}>
+                </div>
+
+                <div class="col-span-7">
+                    <label for="input-price" class="block text-xs font-extrabold text-gray-700 mb-2">
+                        가격 (원)
+                    </label>
+                    <input type="number" id="input-price" placeholder="예) 3000" min="0" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                       border border-gray-300 shadow-sm
+                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
+                       transition" {% if not can_order %} disabled {% endif %}>
+                </div>
+
+                <div class="col-span-12">
+                    <button onclick="addItem()" class="w-full bg-white border border-gray-300 text-gray-800 py-2.5 rounded-xl font-bold text-sm
+           hover:bg-gray-50 transition active:scale-[0.99]
+           disabled:opacity-50 disabled:cursor-not-allowed
+           mb-3" {% if not can_order %} disabled {% endif %}>
+                        + 장바구니에 추가
+                    </button>
+                </div>
+            </div>
         </div>
+
+
+        <button onclick="sendToServer()" class="w-full bg-gray-800 text-white py-2.5 rounded-xl font-extrabold text-sm
+           hover:bg-black transition shadow-sm
+           {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}" {% if not can_order %} disabled {% endif
+            %}>
+            주문 추가하기
+        </button>
     </div>
+</div>
 </div>
 
 
