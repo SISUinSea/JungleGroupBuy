@@ -22,52 +22,49 @@
                 {# 상태 배지 #}
                 {% set st = product.status %}
                 {% if st == 'open' %}
-                    <span class="px-4 py-1.5 bg-green-100 text-green-600 rounded-full text-sm font-bold">
-                        모집중
-                    </span>
+                <span class="px-4 py-1.5 bg-green-100 text-green-600 rounded-full text-sm font-bold">
+                    모집중
+                </span>
                 {% elif st == 'closed' %}
-                    <span class="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-full text-sm font-bold">
-                        마감
-                    </span>
+                <span class="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-full text-sm font-bold">
+                    마감
+                </span>
                 {% elif st == 'hidden' %}
-                    <span class="px-4 py-1.5 bg-zinc-100 text-zinc-600 rounded-full text-sm font-bold">
-                        숨김
-                    </span>
+                <span class="px-4 py-1.5 bg-zinc-100 text-zinc-600 rounded-full text-sm font-bold">
+                    숨김
+                </span>
                 {% elif st == 'purchased' %}
-                    <span class="px-4 py-1.5 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">
-                        구매완료
-                    </span>
+                <span class="px-4 py-1.5 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">
+                    구매완료
+                </span>
                 {% elif st == 'delivered' %}
-                    <span class="px-4 py-1.5 bg-purple-100 text-purple-600 rounded-full text-sm font-bold">
-                        배송완료
-                    </span>
+                <span class="px-4 py-1.5 bg-purple-100 text-purple-600 rounded-full text-sm font-bold">
+                    배송완료
+                </span>
                 {% else %}
-                    <span class="px-4 py-1.5 bg-red-100 text-red-600 rounded-full text-sm font-bold">
-                        {{ st }}
-                    </span>
+                <span class="px-4 py-1.5 bg-red-100 text-red-600 rounded-full text-sm font-bold">
+                    {{ st }}
+                </span>
                 {% endif %}
 
                 {# ✅ 작성자만 상태 변경 UI 노출 #}
                 {% if is_author %}
-                <div class="flex items-center gap-2">
-                    <select id="gb-status-select"
-                        class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-blue-400 outline-none">
-                        <option value="open" {{ 'selected' if product.status == 'open' else '' }}>모집중</option>
-                        <option value="closed" {{ 'selected' if product.status == 'closed' else '' }}>마감</option>
-                        <option value="hidden" {{ 'selected' if product.status == 'hidden' else '' }}>숨김</option>
-                        <option value="purchased" {{ 'selected' if product.status == 'purchased' else '' }}>구매완료</option>
-                        <option value="delivered" {{ 'selected' if product.status == 'delivered' else '' }}>배송완료</option>
+                <div id="gb-status-wrap" class="flex items-center gap-2">
+                    <select id="gb-status-select" class="bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm font-semibold text-gray-700
+               focus:ring-2 focus:ring-blue-400 outline-none">
                     </select>
-                    <button onclick="changeGroupBuyStatus('{{ product._id }}')"
+
+                    <button id="gb-status-btn" onclick="changeGroupBuyStatus('{{ product._id }}')"
                         class="text-sm bg-gray-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-black transition active:scale-95">
                         상태 변경
                     </button>
                 </div>
                 {% endif %}
-                
+
                 <!--수정삭제버튼-->
-                <button id="groupBuy_delete_btn" onclick="groupBuy_delete('{{ product._id }}')" class="px-4 py-1.5 bg-red-100 text-gray-600 rounded-full text-sm font-bold">
-                공동주문 삭제하기
+                <button id="groupBuy_delete_btn" onclick="groupBuy_delete('{{ product._id }}')"
+                    class="px-4 py-1.5 bg-red-100 text-gray-600 rounded-full text-sm font-bold">
+                    공동주문 삭제하기
                 </button>
 
             </div>
@@ -151,7 +148,8 @@
 
                             </td>
                             <td class="px-6 py-5 text-right">
-                                <button onclick="deleteOrder('{{ product._id|string }}', '{{ order._id|string }}')" class="text-gray-300 hover:text-red-500 transition">삭제</button>
+                                <button onclick="deleteOrder('{{ product._id|string }}', '{{ order._id|string }}')"
+                                    class="text-gray-300 hover:text-red-500 transition">삭제</button>
                             </td>
                         </tr>
                         <tr class="bg-gray-50/30">
@@ -162,7 +160,7 @@
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600">
                                             <a href="{{ item.productUrl }}" target="_blank"
-                                               class="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors duration-200">
+                                                class="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors duration-200">
                                                 {{ item.productName }}
                                             </a>
                                             <span class="text-gray-400 ml-2">{{ item.quantity }}개</span>
@@ -190,7 +188,8 @@
                 </div>
             </div>
             <div class="w-full bg-white/50 h-3 rounded-full mb-8 overflow-hidden">
-                {% set progress = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0 else 0 %}
+                {% set progress = (product.currentAmount / product.targetAmount * 100) if product.targetAmount > 0 else
+                0 %}
                 <div class="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                     style="width: '{{ progress if progress <= 100 else 100 }}' ; "></div>
             </div>
@@ -210,43 +209,78 @@
                 </div>
             </div>
 
-            <!-- 3. 입력창 구역 -->
-            <div class="space-y-3">
-                <div class="relative">
-                    <input type="text" id="input-url" placeholder="다이소 URL을 붙여넣으세요"
-                        class="w-full bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none shadow-sm transition-all"
-                        oninput="handleUrlInput(this.value)"
-                        {% if not can_order %} disabled {% endif %}>
-                    <div id="url-loader" class="hidden absolute right-3 top-2 mt-0.5">
-                        <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            <!-- 3. 입력창 구역 (가독성 개선 버전) -->
+            <div class="space-y-4">
+                <!-- URL -->
+                <div>
+                    <label for="input-url" class="block text-xs font-extrabold text-gray-700 mb-2">
+                        다이소 상품 URL
+                    </label>
+
+                    <div class="relative">
+                        <input type="text" id="input-url" placeholder="예) https://www.daisomall.co.kr/.....pdNo=123456"
+                            class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                       border border-gray-300 shadow-sm
+                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
+                       transition" oninput="handleUrlInput(this.value)" {% if not can_order %} disabled {% endif %}>
+                        <div id="url-loader" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                            <div
+                                class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full">
+                            </div>
+                        </div>
                     </div>
+
+                    <p class="mt-2 text-[11px] text-gray-500">
+                        URL을 붙여넣으면 상품명/가격이 자동 입력됩니다.
+                    </p>
                 </div>
 
-                <div class="flex gap-2">
-                    <input type="text" id="input-name" placeholder="물품 명"
-                        class="flex-1 min-w-0 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none"
-                        {% if not can_order %} disabled {% endif %}>
-                    <input type="number" id="input-qty" placeholder="개수" value="1" min="0"
-                        class="w-10 bg-white rounded-full px-3 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none"
-                        {% if not can_order %} disabled {% endif %}>
-                    <input type="number" id="input-price" placeholder="가격" min="0"
-                        class="w-16 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none"
-                        {% if not can_order %} disabled {% endif %}>
+                <!-- 상세 입력 -->
+                <div class="grid grid-cols-12 gap-2">
+                    <div class="col-span-12">
+                        <label for="input-name" class="block text-xs font-extrabold text-gray-700 mb-2">
+                            물품명
+                        </label>
+                        <input type="text" id="input-name" placeholder="예) 물티슈, 수세미..." class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                       border border-gray-300 shadow-sm
+                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
+                       transition" {% if not can_order %} disabled {% endif %}>
+                    </div>
 
-                    <button onclick="addItem()"
-                        class="bg-[#E5E5E5] border border-gray-400 px-4 py-2 rounded-2xl font-bold hover:bg-white transition active:scale-95
-                        {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}"
-                        {% if not can_order %} disabled {% endif %}>
-                        추가
-                    </button>
+                    <div class="col-span-5">
+                        <label for="input-qty" class="block text-xs font-extrabold text-gray-700 mb-2">
+                            개수
+                        </label>
+                        <input type="number" id="input-qty" placeholder="1" value="1" min="1" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                       border border-gray-300 shadow-sm
+                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
+                       transition" {% if not can_order %} disabled {% endif %}>
+                    </div>
+
+                    <div class="col-span-7">
+                        <label for="input-price" class="block text-xs font-extrabold text-gray-700 mb-2">
+                            가격 (원)
+                        </label>
+                        <input type="number" id="input-price" placeholder="예) 3000" min="0" class="w-full bg-white rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400
+                       border border-gray-300 shadow-sm
+                       focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none
+                       transition" {% if not can_order %} disabled {% endif %}>
+                    </div>
+
+                    <div class="col-span-12">
+                        <button onclick="addItem()" class="w-full bg-gray-900 text-white py-3 rounded-2xl font-extrabold
+                       hover:bg-black transition active:scale-[0.99]
+                       disabled:opacity-50 disabled:cursor-not-allowed" {% if not can_order %} disabled {% endif %}>
+                            + 목록에 추가
+                        </button>
+                    </div>
                 </div>
             </div>
 
 
-            <button onclick="sendToServer()"
-                class="w-full bg-gray-800 text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg
-                {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}"
-                {% if not can_order %} disabled {% endif %}>
+            <button onclick="sendToServer()" class="w-full bg-gray-800 text-white py-3 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg
+                {% if not can_order %} opacity-50 cursor-not-allowed {% endif %}" {% if not can_order %} disabled {%
+                endif %}>
                 추가 주문하기
             </button>
         </div>
@@ -260,6 +294,50 @@
 
     const CAN_ORDER = {{ 'true' if product.status == 'open' else 'false' }};
     const CURRENT_STATUS_LABEL = "{{ status_label }}";
+
+    // 상태전이
+    const ALLOWED_STATUS_TRANSITIONS = {
+        open: [
+            { value: "closed", label: "마감" },
+            { value: "hidden", label: "숨김" },
+        ],
+        closed: [
+            { value: "purchased", label: "구매완료" },
+        ],
+        purchased: [
+            { value: "delivered", label: "배송완료" },
+        ],
+        delivered: [],
+        hidden: [],
+    };
+
+    const CURRENT_GROUPBUY_STATUS = "{{ product.status }}";
+
+    function renderGroupBuyStatusSelect() {
+        const wrap = document.getElementById("gb-status-wrap");
+        const sel = document.getElementById("gb-status-select");
+        const btn = document.getElementById("gb-status-btn");
+
+        // 작성자 UI가 없는 경우(비작성자)면 그냥 종료
+        if (!wrap || !sel || !btn) return;
+
+        const options = ALLOWED_STATUS_TRANSITIONS[CURRENT_GROUPBUY_STATUS] || [];
+
+        // 갈 수 있는 상태가 없으면 UI 비활성화 (혹은 숨김)
+        if (options.length === 0) {
+            wrap.classList.add("hidden");
+            return;
+
+            // 2) 숨기지 않고 비활성화하고 싶으면 아래처럼:
+            // sel.innerHTML = `<option>변경 불가</option>`;
+            // sel.disabled = true;
+            // btn.disabled = true;
+            // btn.classList.add("opacity-50", "cursor-not-allowed");
+            // return;
+        }
+
+        sel.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
+    }
 
     function addItem() {
         if (!CAN_ORDER) {
@@ -440,7 +518,7 @@
     }
 
     async function deleteOrder(productId, orderId) {
-        if(!confirm('정말로 이 주문을 삭제하시겠습니까?')) return;
+        if (!confirm('정말로 이 주문을 삭제하시겠습니까?')) return;
 
         try {
             const response = await fetch(`/api/group-buy/${productId}/order/${orderId}`, {
@@ -448,7 +526,7 @@
             });
 
             const result = await response.json();
-            if(result.result === 'success') {
+            if (result.result === 'success') {
                 alert(result.msg);
                 window.location.reload();
             } else {
@@ -461,7 +539,7 @@
     }
 
     async function groupBuy_delete(groupbuyid) {
-        if(!confirm("정말 삭제하시겠습니까?")) return;
+        if (!confirm("정말 삭제하시겠습니까?")) return;
 
         const response = await fetch(`/group-buy/${groupbuyid}/delete`, {
             method: "POST"
@@ -471,17 +549,16 @@
 
         if (data.result == "success") {
             alert("공동구매 글이 삭제되었습니다.");
-            window.location.href = "/";    
+            window.location.href = "/";
         } else {
             alert(data.message);
             return;
         }
     };
 
-
-
     // 페이지 로드 시 초기 렌더링
     renderList();
+    renderGroupBuyStatusSelect();
 </script>
 
 {% endblock %}

@@ -1,4 +1,4 @@
-from dotenv import load_dotenv  # .env 파일에서 환경변수 로드 (시크릿 키 등)
+from dotenv import load_dotenv  # .env 파일에서 환경변수 로드하는 라이브러리 입니당.
 load_dotenv()
 
 import pymongo
@@ -6,8 +6,8 @@ from flask import Flask, render_template, request, jsonify, redirect, session, f
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
-from flask_bcrypt import Bcrypt  # 비밀번호 암호화 라이브러리
-from functools import wraps      # 로그인 상태 체크 데코레이터
+from flask_bcrypt import Bcrypt  # 비밀번호 암호화 라이브러리.. 지우면 안대여 젭알..
+from functools import wraps 
 import re
 import requests
 import os
@@ -41,9 +41,20 @@ GROUPBUY_STATUSES = {
     "purchased": "구매완료",
     "delivered": "배송완료",
 }
+
+ALLOWED_STATUS_TRANSITIONS = {
+    "open": ["closed", "hidden"],
+    "closed": ["purchased"],
+    "purchased": ["delivered"],
+    "delivered": [],
+    "hidden": []
+}
+
 VALID_GROUPBUY_STATUS_SET = set(GROUPBUY_STATUSES.keys())
 
-# SLACK 관련..
+# SLACK API 관련 함수입니당..
+
+# SLACK API 호출 함수
 def slack_api(method: str, payload: dict):
     if not SLACK_BOT_TOKEN:
         return {"ok": False, "error": "missing_SLACK_BOT_TOKEN"}
@@ -58,6 +69,7 @@ def slack_api(method: str, payload: dict):
     except Exception as e:
         return {"ok": False, "error": f"request_failed: {e}"}
 
+# SLACK 이메일로 유저 조회 함수
 def slack_user_id_by_email(email: str):
     if not email:
         return None
@@ -66,12 +78,14 @@ def slack_user_id_by_email(email: str):
         return res["user"]["id"]
     return None
 
+# 유저 아이디로 멘션 문자열 만드는 함수
 def mention(uid: str) -> str:
     return f"<@{uid}>" if uid else ""
 
-# Slack user id lookup 캐시 (이메일 -> uid). 워크스페이스 사용자 많아도 lookupByEmail 호출을 줄이기 위함
+# 호출 최적화 위해 이메일-슬랙UID 매핑하는 캐시
 _SLACK_UID_CACHE = {}
 
+# DB의 user_id 값으로 슬랙 UID 조회하는 함슈
 def slack_uid_by_user_id(user_id: str):
     if not user_id:
         return None
@@ -90,19 +104,20 @@ def slack_uid_by_user_id(user_id: str):
     _SLACK_UID_CACHE[email] = uid
     return uid
 
+# 공구 관련자들의 슬랙 UID 리스트 반환하는 함수
 def groupbuy_member_uids(group_buy_doc: dict):
     uids = []
-    # author
+    # 작성자
     author = (group_buy_doc or {}).get("author") or {}
     author_id = author.get("userId")
     if author_id:
         uids.append(slack_uid_by_user_id(str(author_id)))
-    # participants (orders.user.userId)
+    # orders 참여자
     for o in (group_buy_doc or {}).get("orders", []) or []:
         uid = slack_uid_by_user_id(str((o.get("user") or {}).get("userId")))
         if uid:
             uids.append(uid)
-    # dedupe while preserving order
+    # 중복/빈값 제거
     seen=set()
     out=[]
     for uid in uids:
@@ -112,6 +127,7 @@ def groupbuy_member_uids(group_buy_doc: dict):
         out.append(uid)
     return out
 
+# 공구에 참여하는 사람들에게 슬랙 메시지 보낸느 함수
 def slack_notify_groupbuy(group_buy_doc: dict, text: str):
     if not SLACK_CHANNEL_ID:
         return {"ok": False, "error": "missing_SLACK_CHANNEL_ID"}
@@ -122,15 +138,18 @@ def slack_notify_groupbuy(group_buy_doc: dict, text: str):
 
     return slack_api("chat.postMessage", {"channel": SLACK_CHANNEL_ID, "text": final_text})
 
+# 특정 슬랙 알림이 갓ㅅ는지 체크하는 함수
 def _gb_flag_get(group_buy_doc: dict, key: str):
     return ((group_buy_doc or {}).get("slackFlags") or {}).get(key) is True
 
+# 특정 슬랙 알림이 갔는지 체크하는 함수
 def _gb_flag_set(group_buy_id: str, key: str):
     db.group_buys.update_one(
         {"_id": ObjectId(group_buy_id)},
         {"$set": {f"slackFlags.{key}": True, "updatedAt": datetime.now()}}
     )
 
+# 목표 금액 달성 체크 + 알림 함수
 def _check_and_notify_target_reached(group_buy_id: str):
     gb = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
     if not gb:
@@ -142,8 +161,8 @@ def _check_and_notify_target_reached(group_buy_id: str):
     if target <= 0 or current < target:
         return
 
-    # 여기서 "먼저" flag를 원자적으로 선점함.
-    # 이미 누가 보냈으면 matched_count=0 이라서 아래 알림이 안 나가도록 수정.
+    # 여기서 "먼저" flag를 ATOMIC하게 선점함.
+    # 이미 누가 보냈으면 matched_count=0 이라서 아래 알림이 안 나가도록 함..
     claim = db.group_buys.update_one(
         {
             "_id": ObjectId(group_buy_id),
@@ -160,7 +179,7 @@ def _check_and_notify_target_reached(group_buy_id: str):
     if claim.matched_count == 0:
         return
 
-    # claim 성공한 1건만 여기까지 내려옴
+    # claim 성공한 1건만 여기까지 도달하게 댐
     gb_latest = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
     slack_notify_groupbuy(
         gb_latest or gb,
@@ -169,7 +188,7 @@ def _check_and_notify_target_reached(group_buy_id: str):
     
 def _deadline_job_once():
     now = datetime.now()
-    # 모집중(open)이고 deadline <= now 이며 아직 알림 안 간 것
+    # 모집중(open)이고 deadline <= now 이며 아직 알림 안 간 것..
     cursor = db.group_buys.find({
         "status": "open",
         "deadline": {"$lte": now},
@@ -191,7 +210,11 @@ def start_deadline_watcher():
     t = threading.Thread(target=_loop, daemon=True)
     t.start()
     return t
-###
+
+# 여기까지 슬랙 메소드
+# 읽어보시구 모르겟음 말해주세용
+# ============================================================================
+
 
 def login_required(f):
     @wraps(f)
@@ -412,7 +435,7 @@ def update_order_status():
     return jsonify({"result": "success"})
 
 # =====================================================================
-# ✅ SLACK TEST API (슬랙 봇 토큰, 채널 ID 설정 후 테스트용으로 활용)
+# ✅ SLACK TEST API .. 슬랙 알림 테스트용 API. 실제 서비스엔 적용되지 않습니당. 무시하거나 주석처리 하셔요
 # =====================================================================
 @app.route("/api/slack/test/auth", methods=["GET"])
 def slack_test_auth():
@@ -421,13 +444,10 @@ def slack_test_auth():
 
 @app.route("/api/slack/test/lookup", methods=["POST"])
 def slack_test_lookup():
-    """
-    테스트 1) 이메일 -> Slack User ID 조회가 되는지 확인
-    Body: { "email": "someone@company.com" }
-    """
     data = request.get_json(silent=True) or {}
     email = data.get("email", "").strip()
 
+    # 이메일로 슬랙 UID 조회
     uid = slack_user_id_by_email(email)
     if not uid:
         return jsonify({
@@ -437,6 +457,7 @@ def slack_test_lookup():
             "detail": "Check users:read.email scope, email exists in workspace, token valid"
         }), 400
 
+    #성공하면 여기임
     return jsonify({
         "ok": True,
         "email": email,
@@ -444,7 +465,7 @@ def slack_test_lookup():
         "mention": mention(uid)
     })
     
-# test용
+# 유저 리스트 조회
 @app.route("/api/slack/test/users", methods=["GET"])
 def slack_test_users():
     res = slack_api("users.list", {})
@@ -452,19 +473,6 @@ def slack_test_users():
 
 @app.route("/api/slack/test/post", methods=["POST"])
 def slack_test_post():
-    """
-    테스트 2) 채널로 메시지 전송 + 멘션이 실제로 울리는지 확인
-    Body 예:
-    {
-      "text": "테스트 메시지입니다",
-      "mention_user_id": "U0123456789"   // optional
-    }
-    또는
-    {
-      "text": "테스트 메시지입니다",
-      "mention_email": "someone@company.com"  // optional (lookup 후 멘션)
-    }
-    """
     if not SLACK_CHANNEL_ID:
         return jsonify({"ok": False, "error": "missing_SLACK_CHANNEL_ID"}), 400
 
@@ -489,7 +497,7 @@ def slack_test_post():
         "text": final_text
     })
 
-    # Slack 응답 그대로 반환(디버깅 편하게)
+    # 디버깅용
     status = 200 if res.get("ok") else 400
     return jsonify(res), status
 
@@ -714,6 +722,15 @@ def api_update_group_buy_status():
         return jsonify({"result": "fail", "msg": "게시글 없음"}), 404
 
     old_status = group_buy.get("status")
+
+    # 상태 전이 검증 - 허용된 상태 전이(모집중 -> 마감 -> 구매 완려 -> 배송 완료 -> 숨김)만 허용하게,,,
+    allowed_next = ALLOWED_STATUS_TRANSITIONS.get(old_status, [])
+
+    if new_status not in allowed_next:
+        return jsonify({
+            "result": "fail",
+            "msg": f"{GROUPBUY_STATUSES.get(old_status)} 상태에서는 {GROUPBUY_STATUSES.get(new_status)}(으)로 변경할 수 없습니다."
+        }), 400
 
     if not is_author_of_groupbuy(group_buy, user_doc):
         return jsonify({"result": "fail", "msg": "작성자만 상태 변경이 가능합니다."}), 403
