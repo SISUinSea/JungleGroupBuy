@@ -619,18 +619,43 @@ def my_order_list():
 # =====================================================================
 @app.route('/', methods=['GET'])
 def getGroupBuyList():
-    result_list = list(db.group_buys.find({}).sort("createdAt", pymongo.DESCENDING))
     current_user_id = session.get('user_id')
 
-    for group in result_list:
-        group['is_author'] = current_user_id == str(group['author']["userId"])
-        group['is_participant'] = any(order['user']['userId'] == current_user_id for order in group.get('orders', []))
+    sort = request.args.get("sort", "").strip()  # "", "remaining"
+    sort_stage = {"$sort": {"createdAt": -1}}   # 기본: 최신순
 
-        # 상태명도 같이 만들어두면 템플릿에서 편함 (없어도 무방)
+    if sort == "remaining":
+        # 남은금액 적은 순 + 동률이면 최신순
+        sort_stage = {"$sort": {"remainingAmount": 1, "createdAt": -1}}
+
+    pipeline = [
+        # ✅ 마감된 주문은 항상 제외 (모집중만)
+        {"$match": {"status": "open"}},
+
+        # ✅ 남은 금액 계산
+        {"$addFields": {
+            "remainingAmount": {
+                "$max": [0, {"$subtract": ["$targetAmount", "$currentAmount"]}]
+            }
+        }},
+        sort_stage
+    ]
+
+    result_list = list(db.group_buys.aggregate(pipeline))
+
+    for group in result_list:
+        author_user_id = str((group.get("author") or {}).get("userId"))
+        group['is_author'] = (str(current_user_id) == author_user_id)
+
+        group['is_participant'] = any(
+            str(((order.get('user') or {}).get('userId'))) == str(current_user_id)
+            for order in group.get('orders', [])
+        )
+
         group['statusLabel'] = GROUPBUY_STATUSES.get(group.get("status", ""), group.get("status", ""))
 
-    return render_template('groupBuyList.html', items=result_list)
-
+    # 현재 정렬 상태
+    return render_template('groupBuyList.html', items=result_list, current_sort=sort)
 
 @app.route('/group-buy/<groupbuyid>', methods=['GET'])
 def getGroupBuy(groupbuyid):

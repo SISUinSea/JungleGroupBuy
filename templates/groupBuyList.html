@@ -4,82 +4,115 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto mt-10 space-y-12">
-    
-    <!-- 상단 타이틀 및 작성 버튼 -->
+
+    <!-- 상단 타이틀 -->
     <div class="flex justify-center relative">
         <h1 class="text-3xl font-bold text-gray-800">진행중인 공동주문</h1>
-        
-        <!-- 우측 상단 '공동주문 작성' 버튼 -->
-        <a href="/group-buy/create" class="absolute right-0 top-1/2 -translate-y-1/2 bg-[#EAEAEA] border border-gray-300 text-gray-800 px-6 py-2 rounded-xl font-bold hover:bg-gray-200 transition">
+    </div>
+
+    <!-- ✅ 리스트 우측 상단 컨트롤: 정렬 토글 + 작성 버튼 (UI 통일) -->
+    <div class="flex justify-end items-center gap-2 mt-5">
+        <!-- 남은 금액 순 토글 -->
+        {% if current_sort == 'remaining' %}
+        <a href="/" class="inline-flex items-center justify-center h-9 px-4 rounded-xl
+              bg-gray-900 text-white border border-gray-900
+              text-sm font-bold shadow-sm
+              hover:bg-black transition active:scale-[0.98]">
+            남은 금액 순
+        </a>
+        {% else %}
+        <a href="/?sort=remaining" class="inline-flex items-center justify-center h-9 px-4 rounded-xl
+              bg-white text-gray-800 border border-gray-300
+              text-sm font-bold shadow-sm
+              hover:bg-gray-50 hover:border-gray-400 transition active:scale-[0.98]">
+            남은 금액 순
+        </a>
+        {% endif %}
+
+        <!-- 공동주문 작성 -->
+        <a href="/group-buy/create" class="inline-flex items-center justify-center h-9 px-4 rounded-xl
+            bg-white text-gray-800 border border-gray-300
+            text-sm font-bold shadow-sm
+            hover:bg-gray-50 hover:border-gray-400 transition active:scale-[0.98]">
             공동주문 작성
         </a>
     </div>
-
+    
     <!-- 📋 리스트 영역 -->
     <div class="space-y-6">
         <!-- DB에서 items를 넘겨받아 반복해서 그립니다 -->
         {% for item in items %}
-        
-            <!-- 카드 전체를 누르면 상세 페이지로 이동하도록 <a> 태그로 감쌉니다 -->
-            <!-- hover:scale을 주어 마우스를 올렸을 때 살짝 커지는 애니메이션 추가 -->
-            <a href="/group-buy/{{ item._id }}" class="block transform transition duration-200 hover:scale-[1.01]">
-                {% if item.is_author %}
-                    <div class="absolute -top-3 right-4 z-20 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-black shadow-md border-2 border-white">
-                        👑 내 공동주문
-                    </div>
-                {% elif item.is_participant %}
-                    <div class="absolute -top-3 right-4 z-20 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-black shadow-md border-2 border-white">
-                        🙋 참여중
-                    </div>
-                {% endif %}
 
-                <!-- 카드 본체 (회색 배경, 둥근 테두리) -->
-                <div class="relative bg-[#F8F9FA] border border-gray-300 rounded-[20px] h-[80px] overflow-hidden flex items-center shadow-sm hover:shadow-md transition">
+        <!-- 카드 전체를 누르면 상세 페이지로 이동하도록 <a> 태그로 감쌉니다 -->
+        <!-- hover:scale을 주어 마우스를 올렸을 때 살짝 커지는 애니메이션 추가 -->
+        <a href="/group-buy/{{ item._id }}" class="block transform transition duration-200 hover:scale-[1.01]">
+            {% if item.is_author %}
+            <div
+                class="absolute -top-3 right-4 z-20 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-black shadow-md border-2 border-white">
+                👑 내 공동주문
+            </div>
+            {% elif item.is_participant %}
+            <div
+                class="absolute -top-3 right-4 z-20 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-black shadow-md border-2 border-white">
+                🙋 참여중
+            </div>
+            {% endif %}
 
-                    <!-- 🌊 파란색 진행률 배경 바 (absolute로 깔아둠) -->
-                    <!-- targetAmount가 0일 때의 에러를 방어하는 로직 포함 -->
-                    {% set progress = (item.currentAmount / item.targetAmount * 100) if item.targetAmount > 0 else 0 %}
-                    <div class="absolute top-0 left-0 h-full bg-[#7EC0EE] transition-all duration-700"
-                         style="width: {{ progress if progress <= 100 else 100 }}%;"></div>
+            <!-- 카드 본체 (회색 배경, 둥근 테두리) -->
+            <div
+                class="relative bg-[#F8F9FA] border border-gray-300 rounded-[20px] h-[80px] overflow-hidden flex items-center shadow-sm hover:shadow-md transition">
 
-                    <!-- 텍스트 컨텐츠 (z-10을 줘서 파란색 바 위로 떠오르게 함) -->
-                    <div class="relative z-10 w-full flex justify-between items-center px-8">
+                <!-- 🌊 파란색 진행률 배경 바 (absolute로 깔아둠) -->
+                <!-- targetAmount가 0일 때의 에러를 방어하는 로직 포함 -->
+                {% set progress = (item.currentAmount / item.targetAmount * 100) if item.targetAmount > 0 else 0 %}
+                <div class="absolute top-0 left-0 h-full bg-[#7EC0EE] transition-all duration-700"
+                    style="width: {{ progress if progress <= 100 else 100 }}%;"></div>
 
-                        <!-- 왼쪽: 진행률 텍스트 -->
-                        <span class="text-gray-900 font-medium text-lg">
-                            진행률 {{ "{:,}".format(item.currentAmount) }} / {{ "{:,}".format(item.targetAmount) }}
+                <!-- 텍스트 컨텐츠 (z-10을 줘서 파란색 바 위로 떠오르게 함) -->
+                <div class="relative z-10 w-full flex justify-between items-center px-8">
+
+                    <!-- 왼쪽: 진행률 텍스트 -->
+                    <span class="text-gray-900 font-medium text-lg">
+                        진행률 {{ "{:,}".format(item.currentAmount) }} / {{ "{:,}".format(item.targetAmount) }}
+                    </span>
+
+                    <!-- 오른쪽: 마감일 & 상태 버튼 -->
+                    <div class="flex items-center gap-10">
+                        <span class="text-gray-700 font-medium">
+                            마감일 : {{ item.deadline.strftime('%Y.%m.%d') if item.deadline else '-' }}
                         </span>
 
-                        <!-- 오른쪽: 마감일 & 상태 버튼 -->
-                        <div class="flex items-center gap-10">
-                            <span class="text-gray-700 font-medium">
-                                마감일 : {{ item.deadline.strftime('%Y.%m.%d') if item.deadline else '-' }}
+                        <!-- 상태에 따라 버튼 색상과 텍스트 변경 -->
+                        {% if item.status == 'open' %}
+                        <div class="flex flex-col items-end">
+                            <button
+                                class="bg-[#EAEAEA] border border-gray-400 px-6 py-1.5 rounded-xl text-gray-700 font-bold cursor-pointer hover:bg-gray-300">
+                                모집중
+                            </button>
+                            <span class="mt-1 text-[11px] text-gray-500 font-semibold">
+                                주문번호 {{ item.groupBuyNumber }}
                             </span>
-
-                            <!-- 상태에 따라 버튼 색상과 텍스트 변경 -->
-                            {% if item.status == 'open' %}
-                                <button class="bg-[#EAEAEA] border border-gray-400 px-6 py-1.5 rounded-xl text-gray-700 font-bold cursor-pointer hover:bg-gray-300">
-                                    모집중
-                                </button>
-                            {% else %}
-                                <button class="bg-gray-400 border border-gray-500 px-6 py-1.5 rounded-xl text-white font-bold cursor-not-allowed">
-                                    마감
-                                </button>
-                            {% endif %}
                         </div>
-
+                        {% else %}
+                        <button
+                            class="bg-gray-400 border border-gray-500 px-6 py-1.5 rounded-xl text-white font-bold cursor-not-allowed">
+                            마감
+                        </button>
+                        {% endif %}
                     </div>
+
                 </div>
-            </a>
+            </div>
+        </a>
         {% endfor %}
-        
-        <!-- 데이터가 없을 때의 예외 방어 화면 -->
+
+        <!-- 데이터가 없을 때 -->
         {% if not items %}
         <div class="text-center py-20 text-gray-400">
             현재 진행중인 공동주문이 없습니다.<br>첫 번째 방장이 되어보세요!
         </div>
         {% endif %}
-        
+
     </div>
 </div>
 {% endblock %}
