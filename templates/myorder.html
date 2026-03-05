@@ -9,7 +9,7 @@
     <div class="space-y-6">
         <!-- 💡 app.py에서 보낸 'items'를 반복합니다 -->
         {% for item in items %}
-        <a href="/detail/{{ item.groupBuyNumber }}" class="block transform transition duration-200 hover:scale-[1.01]">
+        <a href="/group-buy/{{ item._id }}" class="block transform transition duration-200 hover:scale-[1.01]">
             <div class="relative bg-[#F8F9FA] border border-gray-300 rounded-[20px] h-[100px] overflow-hidden flex items-center shadow-sm">
                 
                 <!-- 🌊 파란색 진행률 배경 바 -->
