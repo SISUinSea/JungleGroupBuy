@@ -98,7 +98,7 @@ def user_me():
     session['username']='test_user'
     user_id=session.get('username')
     if user_id:
-        user_info=db.user.find_one({'username':user_id}, {'hashed_password':0})
+        user_info=db.users.find_one({'username':user_id}, {'hashed_password':0})
         return render_template('mypage.html', user_info=user_info)
     else:
         return redirect('/api/login')
@@ -117,7 +117,7 @@ def user_update():
     if not name or not class_number or not generation:
         return "<script>alert('모든 정보를 올바르게 입력해주세요.'); history.back();</script>"
 
-    db.user.update_one({'username': session['username']}, {'$set': {
+    db.users.update_one({'username': session['username']}, {'$set': {
         'name':name,
         'class_number':class_number,
         'generation':generation
