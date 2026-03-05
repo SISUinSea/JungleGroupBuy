@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: url-상품 정보 DB cache에 유효기간 적용">
+    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
     </list>
@@ -166,11 +166,30 @@
       <option name="project" value="LOCAL" />
       <updated>1772691502621</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌">
+      <option name="closed" value="true" />
+      <created>1772693478460</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1772693478460</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="inital commit" />
@@ -179,7 +198,8 @@
     <MESSAGE value="feat: 충돌 수동으로 해결&#10;- 이전 Dummy Data(test user 연결) 원상복구&#10;- Git merge 상에서 발생한 충돌 메시지 아예 삭제함(영역 3)" />
     <MESSAGE value="feat: url 입력 시 자동으로 상품명, 가격 가져오는 기능 구현" />
     <MESSAGE value="feat: url-상품 정보 DB cache에 유효기간 적용" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: url-상품 정보 DB cache에 유효기간 적용" />
+    <MESSAGE value="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JungleGroupBuy$JungleGroupBuy.coverage" NAME="JungleGroupBuy 커버리지 결과" MODIFIED="1772623547147" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
