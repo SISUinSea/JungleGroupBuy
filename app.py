@@ -90,20 +90,103 @@ def logout():
     session.clear()
     return redirect('/login')
 
+# 주문 상태 업데이트 API (입금 대기 -> 입금 확인 -> 입금 완료)
+@app.route('/api/order/status', methods=['POST'])
+def update_order_status():
+
+    data = request.get_json()
+
+    group_buy_id = data.get("groupBuyId")
+    order_id = data.get("orderId")
+    new_status = data.get("status")
+
+    user_id = session.get("username")
+
+    if not user_id:
+        return jsonify({"result":"fail","msg":"로그인이 필요합니다."})
+
+    group_buy = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
+
+    if not group_buy:
+        return jsonify({"result":"fail","msg":"게시글 없음"})
+
+    order = None
+    for o in group_buy["orders"]:
+        if str(o["_id"]) == order_id:
+            order = o
+            break
+
+    if not order:
+        return jsonify({"result":"fail","msg":"주문 없음"})
+
+    # 유저 찾기
+    user = db.users.find_one({"username": user_id})
+
+    if not user:
+        return jsonify({"result":"fail","msg":"유저 없음"})
+
+    # -------- 권한 체크 --------
+
+    # 참여자가 입금 완료시.. (입금 대기 -> 작성자 입금 완료)
+    if new_status == "paid":
+
+        if str(order["user"]["userId"]) != str(user["_id"]):
+            return jsonify({"result":"fail","msg":"본인 주문만 변경 가능"})
+
+        db.group_buys.update_one(
+            {
+                "_id": ObjectId(group_buy_id),
+                "orders._id": ObjectId(order_id)
+            },
+            {
+                "$set":{
+                    "orders.$.status":"paid",
+                    "orders.$.updatedAt":datetime.now()
+                }
+            }
+        )
+
+    # 작성자가 입금 확인시.. (입금 완료 -> 게시자 입금 확인)
+    elif new_status == "confirmed":
+
+        if str(group_buy["author"]["userId"]) != str(user["_id"]):
+            return jsonify({"result":"fail","msg":"작성자만 확인 가능"})
+
+        db.group_buys.update_one(
+            {
+                "_id": ObjectId(group_buy_id),
+                "orders._id": ObjectId(order_id)
+            },
+            {
+                "$set":{
+                    "orders.$.status":"confirmed",
+                    "orders.$.updatedAt":datetime.now()
+                },
+                "$inc":{
+                    "currentAmount": order["totalAmount"]
+                }
+            }
+        )
+
+    else:
+        return jsonify({"result":"fail","msg":"잘못된 상태"})
+
+    return jsonify({"result":"success"})
+
 # =====================================================================
 # 🚧 [영역 3]
 # =====================================================================
 
 
     
-@app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
-def user_order():
-    user_id=session.get('username')
-    if user_id:
-        user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
-        return render_template('myorder.html', user_orders=user_orders)
-    else:
-        return redirect('/api/login')
+# @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
+# def user_order():
+#     user_id=session.get('username')
+#     if user_id:
+#         user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
+#         return render_template('myorder.html', user_orders=user_orders)
+#     else:
+#         return redirect('/api/login')
 
 
 
@@ -120,10 +203,27 @@ def getGroupBuyList():
 
 @app.route('/group-buy/<groupbuyid>', methods=['GET'])
 def getGroupBuy(groupbuyid):
+
     result = db.group_buys.find_one({'_id': ObjectId(groupbuyid)})
+
     if result is None:
         return "게시글을 찾을 수 없습니다.", 404
-    return render_template('groupBuyDetail.html', product=result)
+
+    current_user_id = session.get("user_id")
+
+    # ObjectId → string 변환
+    # 게시자, 참여자 구분용 입니다.. 이거 없으면 구분을 못해서 누구나 입금 확인 할 수 있어요..ㅜㅜ
+    if result.get("author"):
+        result["author"]["userId"] = str(result["author"]["userId"])
+
+    for order in result.get("orders", []):
+        order["user"]["userId"] = str(order["user"]["userId"])
+
+    return render_template(
+        'groupBuyDetail.html',
+        product=result,
+        current_user_id=current_user_id
+    )
 
 @app.route('/group-buy/create', methods=['GET'])
 def getGroupBuyCreate():
@@ -210,7 +310,7 @@ def api_add_order():
         "user": {
             "userId": order_user["_id"],
             "name": order_user["name"],
-            "class": order_user.get("class", ""),
+            "class": order_user.get("class_number", ""),
             "generation": order_user.get("generation", 0)
         },
         "status": "pending",
@@ -227,8 +327,8 @@ def api_add_order():
             {
                 # 배열에는 새로운 주문을 쑤셔 넣고($push)
                 "$push": {"orders": new_order},
-                # 현재 총액에는 방금 계산한 금액을 안전하게 더해라($inc)
-                "$inc": {"currentAmount": calculated_total}
+                # # 현재 총액에는 방금 계산한 금액을 안전하게 더해라($inc)
+                # "$inc": {"currentAmount": calculated_total}
             }
         )
     except Exception as e:
