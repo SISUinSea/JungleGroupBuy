@@ -111,9 +111,15 @@
                                 {{ "{:,}".format(order.totalAmount) }}
                             </td>
                             <td class="px-6 py-5 text-center">
+                                {# ✅ 내가 만든 공구에서, 작성자(나)가 넣은 주문이면 상태 대신 "나의 주문"만 #}
+                                {% if is_author and order.user.userId == product.author.userId %}
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-gray-900 text-white">
+                                    나의 주문
+                                </span>
+                                {% else %}
+                                {# 기존 pending/paid/confirmed 상태 표시 로직 그대로 #}
 
                                 {% if order.status == 'pending' %}
-
                                 <span class="px-3 py-1 rounded-lg text-xs font-bold bg-yellow-100 text-yellow-600">
                                     입금 대기
                                 </span>
@@ -126,7 +132,6 @@
                                 {% endif %}
 
                                 {% elif order.status == 'paid' %}
-
                                 <span class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-600">
                                     입금 완료
                                 </span>
@@ -139,13 +144,12 @@
                                 {% endif %}
 
                                 {% elif order.status == 'confirmed' %}
-
                                 <span class="px-3 py-1 rounded-lg text-xs font-bold bg-green-100 text-green-600">
                                     입금 확인
                                 </span>
-
                                 {% endif %}
 
+                                {% endif %}
                             </td>
                             <td class="px-6 py-5 text-right">
                                 <button onclick="deleteOrder('{{ product._id|string }}', '{{ order._id|string }}')"

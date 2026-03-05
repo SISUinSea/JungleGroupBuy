@@ -842,11 +842,9 @@ def api_add_order():
     if not group_buy_id or not items:
         return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
 
-    # 로그인 체크
     if 'user_id' not in session:
         return jsonify({"result": "fail", "msg": "로그인이 필요합니다."}), 401
 
-    # ✅ 게시글 상태 체크 (모집중만 주문 가능)
     group_buy = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
     if not group_buy:
         return jsonify({"result": "fail", "msg": "게시글이 없습니다."}), 404
@@ -863,6 +861,12 @@ def api_add_order():
 
     now = datetime.now()
 
+    # ✅ 작성자인지 판단
+    is_author = str(group_buy["author"]["userId"]) == str(session["user_id"])
+
+    # ✅ 작성자면 즉시 확정(confirmed) 처리
+    order_status = "confirmed" if is_author else "pending"
+
     new_order = {
         "_id": ObjectId(),
         "groupBuyId": ObjectId(group_buy_id),
@@ -872,18 +876,21 @@ def api_add_order():
             "class": order_user.get("class_number", ""),
             "generation": order_user.get("generation", 0)
         },
-        "status": "pending",
+        "status": order_status,
         "totalAmount": calculated_total,
         "items": items,
         "createdAt": now,
         "updatedAt": now
     }
 
+    update_doc = {"$push": {"orders": new_order}}
+
+    # ✅ 작성자 주문이면 금액이 바로 차도록 currentAmount 즉시 증가
+    if is_author:
+        update_doc["$inc"] = {"currentAmount": calculated_total}
+
     try:
-        db.group_buys.update_one(
-            {"_id": ObjectId(group_buy_id)},
-            {"$push": {"orders": new_order}}
-        )
+        db.group_buys.update_one({"_id": ObjectId(group_buy_id)}, update_doc)
     except Exception as e:
         print(f"주문 DB 업데이트 에러: {e}")
         return jsonify({"result": "fail", "msg": "DB 저장 중 오류가 발생했습니다."}), 500
