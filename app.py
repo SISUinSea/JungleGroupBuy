@@ -301,13 +301,22 @@ def groupBy_delete(groupbuyid):
     result = db.group_buys.find_one({'_id': ObjectId(groupbuyid)})
 
     if result is None:
-        return jsonify({"result":"fail", "message": "게시글을 찾을 수 없습니다."}), 404
+        return jsonify({"result":"fail", "message": "공동주문 글을 찾을 수 없습니다."}), 404
 
     current_user_id = session.get("user_id")
     author_id = str(result["author"]["userId"])
 
     if author_id != current_user_id:
         return jsonify({"result":"fail","message":"작성자만 삭제할 수 있습니다."})
+
+    orders = result["orders"]
+
+    if any(str(order["user"]["userId"]) != author_id for order in orders):
+        return jsonify({"result":"fail","message":"본인 이외에 참여자가 있는 공동주문 글은 삭제 할 수 없습니다."})
+
+    status = result["status"]
+    if result["status"] != "open":
+        return jsonify({"result":"fail","message":"모집 이후 단계에서는 공동주문 글을 삭제 할 수 없습니다."})
 
     db.group_buys.delete_one({'_id': ObjectId(groupbuyid)})
     return jsonify({'result': 'success'})
