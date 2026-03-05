@@ -46,7 +46,7 @@
                     <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="col-span-full">
                             <label for="username" class="block text-sm/6 font-medium text-gray-900">아이디</label>
-                            <div class="mt-2 flex gap-2">
+                            <div class="mt-2">
                                 <input id="username" type="text" name="username" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required/>
                                 <button type="button" id="username_duplicate_check_btn" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">중복 확인</button>
                             </div>
@@ -107,19 +107,23 @@
                 <div class="border-b border-gray-900/10 pb-12">
                     <div class="mt-10 space-y-10">
                         <fieldset>
-                            <legend class="text-sm/6 font-semibold text-gray-900">이용 정책 동의</legend>
+                            <legend class="text-sm/6 font-semibold text-gray-900">서비스 약관에 동의해 주세요.</legend>
                             <div class="mt-6 space-y-6">
                                 <div class="flex gap-3">
-                                    <input id="comments" type="checkbox" name="comments" checked required/>
-                                    <label for="comments">개인정보 수집 및 이용 동의</label>
+                                    <input id="all_check" type="checkbox" name="all_check" required/>
+                                    <label for="all_check">모두 동의합니다.</label>
                                 </div>
                                 <div class="flex gap-3">
-                                    <input id="candidates" type="checkbox" name="candidates" checked required/>
-                                    <label for="candidates">Candidates</label>
+                                    <input id="privateInfo_check" type="checkbox" name="privateInfo_check" required/>
+                                    <label for="privateInfo_check">[필수]개인정보 수집 및 이용 동의</label>
                                 </div>
                                 <div class="flex gap-3">
-                                    <input id="offers" type="checkbox" name="offers"/>
-                                    <label for="offers">Offers</label>
+                                    <input id="age_check" type="checkbox" name="age_check" required/>
+                                    <label for="age_check">[필수]만 19세 이상입니다.</label>
+                                </div>
+                                <div class="flex gap-3">
+                                    <input id="marketing_check" type="checkbox" name="marketing_check"/>
+                                    <label for="marketing_check">[선택]마케팅 활용 동의 및 광고성 정보의 수신 동의</label>
                                 </div>
                             </div>
                         </fieldset>
@@ -162,6 +166,13 @@
         const password_error = document.getElementById('password_error');
         const password_check_error = document.getElementById('password_check_error');
         const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/; // 영문, 숫자, 일부 특수기호만 각각 하나 이상씩 포함해서 8-20자 이내
+        const slack_email = document.getElementById('slack_email');
+        const email_format_error = document.getElementById('email_format_error');
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const privateInfo_check = document.getElementById('privateInfo_check');
+        const age_check = document.getElementById('age_check');
+        const all_check = document.getElementById('all_check');
+        const sub_check = [document.getElementById('privateInfo_check'), document.getElementById('age_check'), document.getElementById('marketing_check')];
         const joinBtn = document.getElementById('joinBtn');
 
         username.addEventListener('input', () => {
@@ -185,7 +196,6 @@
 
         username_duplicate_check_btn.addEventListener('click', () => {
             const currentID = username.value;
-            const usernameRegex = /^[a-zA-Z0-9_]*$/; 
 
             if (currentID.length < 4 || currentID.length > 12 || !usernameRegex.test(currentID)) {
             alert("아이디 유효성을 확인해주세요.");
@@ -233,6 +243,23 @@
         password_check.addEventListener('input', () => {
             checkPasswordMatch();
         });
+
+        slack_email.addEventListener('input', () => {
+            const value = slack_email.value;
+            if(!emailRegex.test(value)) {
+                email_format_error.classList.remove('hidden');
+            } else {
+                email_format_error.classList.add('hidden');
+            }
+        });
+
+        all_check.addEventListener('change', () => {
+            sub_check.forEach(check => {check.checked = all_check.checked;});
+        });
+
+        subChecks.forEach(check => {check.addEventListener('change', () => { const allChecked = subChecks.every(c => c.checked);
+            all_check.checked = allChecked;
+        });});
 
         const signupForm = document.getElementById('signup-form');
 
@@ -283,6 +310,12 @@
 
             if (!emailRegex.test(email)) {
                 alert("올바른 이메일 형식이 아닙니다.");
+                event.preventDefault();
+                return;
+            }
+
+            if (!privateInfo_check.checked || !age_check.checked) {
+                alert("필수 동의 약관에 동의가 필요합니다.");
                 event.preventDefault();
                 return;
             }
