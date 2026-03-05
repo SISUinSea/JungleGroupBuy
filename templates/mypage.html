@@ -15,7 +15,8 @@
             </div>
             <h2 class="text-2xl font-bold text-gray-800">내 정보 수정</h2>
         </div>
-
+        
+        <form action="/update" method="POST">
         <!-- 2. 정보 입력/확인 구역 (세로로 길게 배치) -->
         <div class="space-y-6">
 
@@ -59,8 +60,6 @@
 
         </div>
 
-        <!-- 3. 수정하기 버튼 -->
-        <form action="/api/user/update" method="POST">
             <div class="mt-12">
                 <button
                     class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
