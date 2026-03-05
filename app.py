@@ -93,31 +93,37 @@ def logout():
 # =====================================================================
 # 🚧 [영역 3]
 # =====================================================================
-@app.route('/mypage', methods=['GET']) #마이페이지 정보 수집
+@app.route('/api/user/me', methods=['GET', 'POST']) #마이페이지 정보 수집
 def user_me():
     session['username']='test_user'
     user_id=session.get('username')
-    if user_id:
-        user_info=db.users.find_one({'username':user_id}, {'hashed_password':0})
-        return render_template('mypage.html', user_info=user_info)
+    if not user_id:
+        return redirect('/api/login')
+    
+    if request.method == 'GET':
+        return render_template('password_confirm.html')
+    
     else:
-        return redirect('/login')   #api/login -> /login 으로 변경하셔야 해용
+        password_receive=request.form['password_give']
+        user=db.users.fine_one({'username':user_id})
+        hashed_password=user.get('hashed_password')
+        if hashed_password and bcrypt.checkpw(password_receive.encode('uft-8'), hashed_password):
+            user_info=db.users.find_one({'username':user_id}, {'hashed_password': 0})
+            return render_template('mypage.html', user_info=user_info)
+        else:
+            return "<script>alert('비밀번호가 일치하지 않습니다.'); history.back();</script>"
 
-<<<<<<< HEAD
+
 @app.route('/api/user/update', methods=['POST']) #정보수정(이름, 반, 기수)
-=======
-@app.route('/update', methods=['POST']) #정보수정(이름, 반, 기수)
->>>>>>> 7ee008c2b5b407c54c9e8ca7daef8140ddd4dedd
 def user_update():
     user_id=session.get('username')
     if not user_id:
-        return redirect('/login')   #api/login -> /login 으로 변경하셔야 해용
+        return redirect('/api/login')
     
     name=request.form.get('name','').strip()
     class_number=request.form.get('class_number','').strip()
     generation=request.form.get('generation','').strip()
     print(f"DEBUG: '{name}', '{class_number}', '{generation}'")
-    print(request.form)
 
     if not name or not class_number or not generation:
         return "<script>alert('모든 정보를 올바르게 입력해주세요.'); history.back();</script>"
@@ -128,21 +134,17 @@ def user_update():
         'generation':generation
     }})
     
-    return "<script>alert('수정이 완료되었습니다!'); window.location.href='/mypage';</script>"
+    return "<script>alert('수정이 완료되었습니다!'); window.location.href='/api/user/me';</script>"
 
-<<<<<<< HEAD
     
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
-=======
-@app.route('/my-orders', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
->>>>>>> 7ee008c2b5b407c54c9e8ca7daef8140ddd4dedd
 def user_order():
     user_id=session.get('username')
     if user_id:
         user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
         return render_template('myorder.html', user_orders=user_orders)
     else:
-        return redirect('/login') #api/login -> /login 으로 변경하셔야 해용
+        return redirect('/api/login')
 
 
 
