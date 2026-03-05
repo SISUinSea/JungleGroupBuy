@@ -619,7 +619,7 @@ def api_delete_order(group_buy_id, order_id):
 
 
         # 금액이 포함된 경우에는 그 금액도 빼야함
-        if target_order["status"] != "pending":
+        if target_order["status"] == "confirmed":
             amount_to_subtract = -target_order["totalAmount"]
 
             db.group_buys.update_one(
