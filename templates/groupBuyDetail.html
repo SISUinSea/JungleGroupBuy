@@ -62,10 +62,18 @@
                 {% endif %}
 
                 <!--수정삭제버튼-->
-                <button id="groupBuy_delete_btn" onclick="groupBuy_delete('{{ product._id }}')"
-                    class="px-4 py-1.5 bg-red-100 text-gray-600 rounded-full text-sm font-bold">
-                    공동주문 삭제하기
+                {% if is_author %}
+                <div><button id="groupBuy_modify_mode_btn" onclick="groupBuy_modify_mode()" class="px-4 py-1.5 bg-blue-100 text-gray-600 rounded-full text-sm font-bold">
+                수정
+                </button>                
+                <button id="groupBuy_delete_btn" onclick="groupBuy_delete('{{ product._id }}')" class="px-4 py-1.5 bg-red-100 text-gray-600 rounded-full text-sm font-bold">
+                삭제
                 </button>
+                <button id="groupBuy_modify_btn" onclick="groupBuy_modify('{{ product._id }}')" class="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-full text-sm font-bold hidden">
+                확인
+                </button> 
+                </div>
+                {% endif %}
 
             </div>
 
@@ -77,10 +85,12 @@
                 </div>
                 <div>
                     <h2 class="text-sm font-bold text-gray-400 mb-1">오픈채팅 링크</h2>
-                    <a href="{{ product.openChatUrl }}" target="_blank"
+                    <a id = "openChatUrl" href="{{ product.openChatUrl }}" target="_blank"
                         class="text-blue-500 hover:underline font-medium break-all">
                         {{ product.openChatUrl }}
                     </a>
+                    <input id="openChatUrl_modify_input" type="text" name="openChatUrl_modify_input" value = "{{ product.openChatUrl }}" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 hidden" required/>
+                    
                 </div>
             </div>
         </div>
@@ -567,6 +577,33 @@
         if (data.result == "success") {
             alert("공동구매 글이 삭제되었습니다.");
             window.location.href = "/";
+        } else {
+            alert(data.message);
+            return;
+        }
+    };
+
+    function groupBuy_modify_mode() {
+        document.getElementById("groupBuy_modify_mode_btn").classList.add('hidden');
+        document.getElementById("groupBuy_delete_btn").classList.add('hidden');
+        document.getElementById("groupBuy_modify_btn").classList.remove('hidden');
+        document.getElementById("openChatUrl").classList.add('hidden');
+        document.getElementById("openChatUrl_modify_input").classList.remove('hidden');
+    }
+
+    async function groupBuy_modify(groupbuyid) {
+        const newOpenChatUrl = document.getElementById("openChatUrl_modify_input").value
+        const response = await fetch(`/group-buy/${groupbuyid}/modify`, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({"newOpenChatUrl": newOpenChatUrl})
+        });
+
+        const data = await response.json();
+
+        if (data.result == "success") {
+            alert("글이 수정되었습니다.");
+            location.reload();  
         } else {
             alert(data.message);
             return;

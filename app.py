@@ -344,6 +344,23 @@ def groupBy_delete(groupbuyid):
     db.group_buys.delete_one({'_id': ObjectId(groupbuyid)})
     return jsonify({'result': 'success'})
 
+@app.route('/group-buy/<groupbuyid>/modify', methods=['POST'])
+def groupBy_modify(groupbuyid):
+    result = db.group_buys.find_one({'_id': ObjectId(groupbuyid)})
+
+    if result is None:
+        return jsonify({"result":"fail", "message": "공동주문 글을 찾을 수 없습니다."}), 404
+
+    current_user_id = session.get("user_id")
+    author_id = str(result["author"]["userId"])
+
+    if author_id != current_user_id:
+        return jsonify({"result":"fail","message":"작성자만 수정할 수 있습니다."})
+
+    newOpenChatUrl = request.json['newOpenChatUrl']
+
+    db.group_buys.update_one({'_id': ObjectId(groupbuyid)}, {'$set': {'openChatUrl' : newOpenChatUrl}})
+    return jsonify({'result': 'success'})
 
 
 # =====================================================================
