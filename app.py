@@ -3,25 +3,72 @@ from flask import Flask, render_template, request, jsonify, redirect, session, f
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
-from flask_bcrypt import Bcrypt # 비밀번호 암호화 라이브러리
-from functools import wraps     # 로그인 상태 체크 데코레이터
+from flask_bcrypt import Bcrypt  # 비밀번호 암호화 라이브러리
+from functools import wraps      # 로그인 상태 체크 데코레이터
 import re
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'jungle'
-client = MongoClient('mongodb+srv://jungle_for_all:1234@junglegroupbuy.vvvtwuf.mongodb.net/?appName=jungleGroupBuy', tlsAllowInvalidCertificates=True)
+client = MongoClient(
+    'mongodb+srv://jungle_for_all:1234@junglegroupbuy.vvvtwuf.mongodb.net/?appName=jungleGroupBuy',
+    tlsAllowInvalidCertificates=True
+)
 db = client.jungle_groupbuy
 
-# bcrypt 라이브러리 사용하기 위한 설정입니다. 꼬오옥 상단에 임포트 해줘야 쓸 수 있어요.
 bcrypt = Bcrypt(app)
 
+app.config['JSON_AS_ASCII'] = False
+app.json.ensure_ascii = False
+
+# =========================
+# 공통 유틸
+# =========================
+
+GROUPBUY_STATUSES = {
+    "open": "모집중",
+    "closed": "마감",
+    "hidden": "숨김",
+    "purchased": "구매완료",
+    "delivered": "배송완료",
+}
+VALID_GROUPBUY_STATUS_SET = set(GROUPBUY_STATUSES.keys())
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def get_logged_in_user_doc():
+    """현재 로그인한 유저 문서(users)를 반환 (없으면 None)"""
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+    try:
+        return db.users.find_one({"_id": ObjectId(user_id)})
+    except Exception:
+        return None
+
+
+def is_author_of_groupbuy(group_buy_doc, user_doc):
+    if not group_buy_doc or not user_doc:
+        return False
+    author = group_buy_doc.get("author", {})
+    return str(author.get("userId")) == str(user_doc.get("_id"))
+
+
 # =====================================================================
-# 🚧 [영역 1]
+# 🚧 [영역 1] 회원가입
 # =====================================================================
-# 회원가입 기능
 @app.route('/signup')
 def sign_up_page():
     return render_template('signup.html')
+
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -35,22 +82,17 @@ def signup():
         class_number = request.form['class_number']
         createdAt = datetime.now()
 
-        # 비밀번호 암호화
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-        # 서버 측 유효성 검증 규칙
         strong_pw_pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$'
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
-        # 1. 누락 값 확인
         if not all([username, password, name, email, generation, class_number]):
             return "<script>alert('모든 항목을 입력해주세요.'); history.back();</script>"
 
-        # 2. 아이디 형식 확인
         if not re.match(r'^[a-zA-Z0-9_]{4,12}$', username):
             return "<script>alert('아이디 형식이 올바르지 않습니다.'); history.back();</script>"
 
-        # 3. 비밀번호 강도 확인
         if not re.match(strong_pw_pattern, password):
             return "<script>alert('비밀번호가 보안 규칙에 맞지 않습니다.'); history.back();</script>"
         if password != password_check:
@@ -59,26 +101,25 @@ def signup():
         if not re.match(r'^.{2,30}$', name):
             return "<script>alert('이름은 2-30자 이내여야 합니다.'); history.back();</script>"
 
-        # 4. 이메일 형식 확인
         if not re.match(email_pattern, email):
             return "<script>alert('이메일 형식이 올바르지 않습니다.'); history.back();</script>"
 
-        # 5. DB 중복 최종 확인
         if db.users.find_one({'username': username}):
             return "<script>alert('이미 존재하는 아이디입니다.'); history.back();</script>"
 
         user_info = {
-            'username': username, 
-            'password': hashed_password, 
-            'name': name, 
-            'email': email, 
-            'generation': generation, 
-            'class_number': class_number, 
+            'username': username,
+            'password': hashed_password,
+            'name': name,
+            'email': email,
+            'generation': generation,
+            'class_number': class_number,
             'createdAt': createdAt
-            }
-        
+        }
+
         db.users.insert_one(user_info)
         return "<script>alert('회원가입이 완료되었습니다!'); location.href='/login';</script>"
+
 
 @app.route('/signup/username_duplicate_check', methods=['POST'])
 def username_duplicate_check():
@@ -86,158 +127,112 @@ def username_duplicate_check():
     requested_username = data.get('username')
 
     user = db.users.find_one({'username': requested_username})
+    return jsonify({"isDuplicate": True if user else False})
 
-    if user:
-        is_duplicate = True
-    else:
-        is_duplicate = False
-    
-    return jsonify({
-        "isDuplicate": is_duplicate
-    })
-
-
-     
 
 # =====================================================================
-# 🚧 [영역 2]
+# 🚧 [영역 2] 로그인/로그아웃
 # =====================================================================
-# 로그인
 @app.route('/login', methods=['GET'])
 def login_page():
-    return render_template('login.html')  # 로그인 페이지로 이동
+    return render_template('login.html')
+
 
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form['username']
     password = request.form['password']
-    
+
     user = db.users.find_one({'username': username})
-    
+
     if user and bcrypt.check_password_hash(user['password'], password):
         session['user_id'] = str(user['_id'])
         session['username'] = user['username']
-        flash('로그인 성공!', 'success')  # flash
+        flash('로그인 성공!', 'success')
         return redirect('/')
-    
-    # 로그인 실패...
+
     alert_msg = "아이디와 비밀번호를 확인하세요."
     return render_template('login.html', alert_msg=alert_msg)
 
-# 로그인 여부 확인하는 데코레이터 함수입니당. 로그인이 필요한 페이지에 @login_required 데코레이터를 붙여주시면 됩니다!!
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect('/login')
-        return f(*args, **kwargs)
-    return decorated_function
 
-# 로그아웃
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/login')
 
-# 주문 상태 업데이트 API (입금 대기 -> 입금 확인 -> 입금 완료)
+
+# =====================================================================
+# ✅ 주문 상태 업데이트 API (입금 대기 -> 입금 완료 -> 입금 확인)
+# =====================================================================
 @app.route('/api/order/status', methods=['POST'])
 def update_order_status():
-
     data = request.get_json()
 
     group_buy_id = data.get("groupBuyId")
     order_id = data.get("orderId")
     new_status = data.get("status")
 
-    user_id = session.get("username")
-
-    if not user_id:
-        return jsonify({"result":"fail","msg":"로그인이 필요합니다."})
+    # 로그인 체크
+    user_doc = get_logged_in_user_doc()
+    if not user_doc:
+        return jsonify({"result": "fail", "msg": "로그인이 필요합니다."})
 
     group_buy = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
-
     if not group_buy:
-        return jsonify({"result":"fail","msg":"게시글 없음"})
+        return jsonify({"result": "fail", "msg": "게시글 없음"})
 
+    # 주문 찾기
     order = None
-    for o in group_buy["orders"]:
-        if str(o["_id"]) == order_id:
+    for o in group_buy.get("orders", []):
+        if str(o["_id"]) == str(order_id):
             order = o
             break
 
     if not order:
-        return jsonify({"result":"fail","msg":"주문 없음"})
+        return jsonify({"result": "fail", "msg": "주문 없음"})
 
-    # 유저 찾기
-    user = db.users.find_one({"username": user_id})
-
-    if not user:
-        return jsonify({"result":"fail","msg":"유저 없음"})
-
-    # -------- 권한 체크 --------
-
-    # 참여자가 입금 완료시.. (입금 대기 -> 작성자 입금 완료)
+    # -------- 권한/로직 체크 --------
     if new_status == "paid":
-
-        if str(order["user"]["userId"]) != str(user["_id"]):
-            return jsonify({"result":"fail","msg":"본인 주문만 변경 가능"})
+        # 참여자가 본인 주문만 입금완료로 변경 가능
+        if str(order["user"]["userId"]) != str(user_doc["_id"]):
+            return jsonify({"result": "fail", "msg": "본인 주문만 변경 가능"})
 
         db.group_buys.update_one(
-            {
-                "_id": ObjectId(group_buy_id),
-                "orders._id": ObjectId(order_id)
-            },
-            {
-                "$set":{
-                    "orders.$.status":"paid",
-                    "orders.$.updatedAt":datetime.now()
-                }
-            }
+            {"_id": ObjectId(group_buy_id), "orders._id": ObjectId(order_id)},
+            {"$set": {"orders.$.status": "paid", "orders.$.updatedAt": datetime.now()}}
         )
 
-    # 작성자가 입금 확인시.. (입금 완료 -> 게시자 입금 확인)
     elif new_status == "confirmed":
-
-        if str(group_buy["author"]["userId"]) != str(user["_id"]):
-            return jsonify({"result":"fail","msg":"작성자만 확인 가능"})
+        # 작성자만 입금확인 가능
+        if not is_author_of_groupbuy(group_buy, user_doc):
+            return jsonify({"result": "fail", "msg": "작성자만 확인 가능"})
 
         db.group_buys.update_one(
+            {"_id": ObjectId(group_buy_id), "orders._id": ObjectId(order_id)},
             {
-                "_id": ObjectId(group_buy_id),
-                "orders._id": ObjectId(order_id)
-            },
-            {
-                "$set":{
-                    "orders.$.status":"confirmed",
-                    "orders.$.updatedAt":datetime.now()
-                },
-                "$inc":{
-                    "currentAmount": order["totalAmount"]
-                }
+                "$set": {"orders.$.status": "confirmed", "orders.$.updatedAt": datetime.now()},
+                "$inc": {"currentAmount": order["totalAmount"]}
             }
         )
-
     else:
-        return jsonify({"result":"fail","msg":"잘못된 상태"})
+        return jsonify({"result": "fail", "msg": "잘못된 상태"})
 
-    return jsonify({"result":"success"})
+    return jsonify({"result": "success"})
+
 
 # =====================================================================
-# 🚧 [영역 3]
+# 🚧 [영역 3] 마이페이지
 # =====================================================================
-@app.route('/mypage', methods=['GET', 'POST']) # 1. POST 추가
+@app.route('/mypage', methods=['GET', 'POST'])
 @login_required
 def user_me():
     user_id = session.get('username')
     if not user_id:
         return redirect('/login')
 
-    # 처음 접속했을 때 (GET): 비밀번호 입력창 보여주기
     if request.method == 'GET':
         user_info = db.users.find_one({'username': user_id}, {'password': 0})
         return render_template('password_confirm.html', user_info=user_info)
-
-    # 비밀번호 입력 후 [확인] 눌렀을 때 (POST): 비밀번호 검증
     else:
         password_receive = request.form['password_give']
         user = db.users.find_one({'username': user_id})
@@ -249,62 +244,49 @@ def user_me():
         else:
             return "<script>alert('비밀번호가 일치하지 않습니다.'); history.back();</script>"
 
-@app.route('/update', methods=['POST']) #내정보 수정(이름, 반, 기수)
-def user_update():
-    user_id=session.get('username')
 
+@app.route('/update', methods=['POST'])
+def user_update():
+    user_id = session.get('username')
     if not user_id:
         return redirect('/login')
 
-    name=request.form.get('name','').strip()
-    class_number=request.form.get('class_number','').strip()
-    generation=request.form.get('generation','').strip()
+    name = request.form.get('name', '').strip()
+    class_number = request.form.get('class_number', '').strip()
+    generation = request.form.get('generation', '').strip()
 
-    print(request.form)
-    print("SESSION USER:", user_id)
-    print("SESSION:", session)
-    
     if not name or not class_number or not generation:
         return "<script>alert('모든 필드를 입력해주세요.'); history.back();</script>"
 
     result = db.users.update_one(
         {'username': user_id},
-        {'$set': {
-            'name': name,
-            'class_number': class_number,
-            'generation': generation
-        }}
+        {'$set': {'name': name, 'class_number': class_number, 'generation': generation}}
     )
 
-    print("MATCHED:", result.matched_count)
-    print("MODIFIED:", result.modified_count)
     if result.matched_count == 0:
         return "<script>alert('사용자를 찾을 수 없습니다'); location.href='/mypage';</script>"
     return "<script>alert('수정 완료'); location.href='/mypage';</script>"
-    
-@app.route('/update/password', methods=['POST']) #비밀번호 변경
+
+
+@app.route('/update/password', methods=['POST'])
 def update_password():
-    user_id=session.get('username')
+    user_id = session.get('username')
     if not user_id:
         return redirect('/login')
-    
-    new_password=request.form.get('new_password','').strip()
-    new_password_confirm=request.form.get('new_password_confirm','').strip()
+
+    new_password = request.form.get('new_password', '').strip()
+    new_password_confirm = request.form.get('new_password_confirm', '').strip()
 
     if not new_password or not new_password_confirm:
         return "<script>alert('모든 비밀번호 필드를 입력해주세요.'); history.back();</script>"
-    
+
     if new_password != new_password_confirm:
         return "<script>alert('비밀번호가 서로 일치하지 않습니다.'); history.back();</script>"
-    
+
     hashed_new_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
-    db.users.update_one(
-        {'username': user_id},
-        {'$set': {'password': hashed_new_password}}
-    )
+    db.users.update_one({'username': user_id}, {'$set': {'password': hashed_new_password}})
 
     return "<script>alert('비밀번호가 성공적으로 변경되었습니다.'); location.href='/mypage';</script>"
-    
 
 @app.route('/api/user/order', methods=['GET']) #나의 주문
 def user_order():
@@ -344,9 +326,8 @@ def my_order():
 
 
 # =====================================================================
-# 🚧 [영역 4]
+# 🚧 [영역 4] 공동구매 목록/상세/생성
 # =====================================================================
-
 @app.route('/', methods=['GET'])
 def getGroupBuyList():
     result_list = list(db.group_buys.find({}).sort("createdAt", pymongo.DESCENDING))
@@ -354,39 +335,45 @@ def getGroupBuyList():
 
     for group in result_list:
         group['is_author'] = current_user_id == str(group['author']["userId"])
-        group['is_participant'] = any(order['user']['userId'] == current_user_id for order in group['orders'])
+        group['is_participant'] = any(order['user']['userId'] == current_user_id for order in group.get('orders', []))
 
+        # 상태명도 같이 만들어두면 템플릿에서 편함 (없어도 무방)
+        group['statusLabel'] = GROUPBUY_STATUSES.get(group.get("status", ""), group.get("status", ""))
 
     return render_template('groupBuyList.html', items=result_list)
 
 
 @app.route('/group-buy/<groupbuyid>', methods=['GET'])
 def getGroupBuy(groupbuyid):
-
     result = db.group_buys.find_one({'_id': ObjectId(groupbuyid)})
-
     if result is None:
         return "게시글을 찾을 수 없습니다.", 404
 
     current_user_id = session.get("user_id")
 
-    # ObjectId → string 변환
-    # 게시자, 참여자 구분용 입니다.. 이거 없으면 구분을 못해서 누구나 입금 확인 할 수 있어요..ㅜㅜ
+    # ObjectId → string 변환 (템플릿에서 비교용)
     if result.get("author"):
         result["author"]["userId"] = str(result["author"]["userId"])
 
     for order in result.get("orders", []):
         order["user"]["userId"] = str(order["user"]["userId"])
 
+    # 작성자 여부/상태 라벨
+    is_author = (current_user_id == result["author"]["userId"]) if current_user_id else False
+    status_label = GROUPBUY_STATUSES.get(result.get("status", ""), result.get("status", ""))
+
     return render_template(
         'groupBuyDetail.html',
         product=result,
-        current_user_id=current_user_id
+        current_user_id=current_user_id,
+        is_author=is_author,
+        status_label=status_label,
+        status_map=GROUPBUY_STATUSES
     )
+
 
 @app.route('/group-buy/create', methods=['GET'])
 def getGroupBuyCreate():
-
     return render_template('groupBuyCreate.html')
 
 
@@ -407,56 +394,80 @@ def api_create_group_buy():
     except ValueError:
         return jsonify({"result": "fail", "msg": "잘못된 날짜 형식입니다."}), 400
 
+    if 'user_id' not in session:
+        return jsonify({"result": "fail", "msg": "로그인이 필요합니다."}), 401
 
     author_user = db.users.find_one({"_id": ObjectId(session['user_id'])})
-
     if not author_user:
         return jsonify({"result": "fail", "msg": "유저가 DB에 없습니다."}), 500
 
-    # [최종 DB 입력용 데이터 조립]
     now = datetime.now()
     new_group_buy = {
-        "groupBuyNumber": now.strftime("%Y%m%d%H%M%S"),  # 임시로 현재시간 기반 번호 생성
+        "groupBuyNumber": now.strftime("%Y%m%d%H%M%S"),
         "author": {
             "userId": author_user["_id"],
             "name": author_user["name"],
             "class": author_user.get("class", ""),
             "generation": author_user.get("generation", 0)
         },
-        "targetAmount": 30000,  # 다이소 무료배송 고정값
-        "currentAmount": total_amount,  # 현재는 0 (경로 B)
-        "deadline": deadline_date,  # Date 객체!
-        "status": "open",
+        "targetAmount": 30000,
+        "currentAmount": total_amount,
+        "deadline": deadline_date,
+        "status": "open",  # ✅ 기본은 모집중
         "openChatUrl": open_chat_url,
         "createdAt": now,
         "updatedAt": now,
-        "orders": orders  # 현재는 빈 배열 [] (경로 B)
+        "orders": orders
     }
 
-    # DB에 밀어 넣기
     result = db.group_buys.insert_one(new_group_buy)
-
-    # [응답] 프론트엔드가 기다리는 'inserted_id'를 반드시 문자열로 변환해서 줘야 합니다.
-    # JS의 window.location.href = `/group-buy/${result.inserted_id}`; 가 작동하게 됨!
-    return jsonify({
-        "result": "success",
-        "inserted_id": str(result.inserted_id)
-    })
+    return jsonify({"result": "success", "inserted_id": str(result.inserted_id)})
 
 
+# =====================================================================
+# ✅ 게시글 상태 변경 API (작성자만)
+# - 모집중(open), 마감(closed), 숨김(hidden), 구매완료(purchased), 배송완료(delivered)
+# =====================================================================
+@app.route('/api/group-buy/status', methods=['POST'])
+def api_update_group_buy_status():
+    data = request.get_json()
+
+    group_buy_id = data.get("groupBuyId")
+    new_status = data.get("status")
+
+    if not group_buy_id or not new_status:
+        return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
+
+    if new_status not in VALID_GROUPBUY_STATUS_SET:
+        return jsonify({"result": "fail", "msg": "허용되지 않은 상태값입니다."}), 400
+
+    user_doc = get_logged_in_user_doc()
+    if not user_doc:
+        return jsonify({"result": "fail", "msg": "로그인이 필요합니다."}), 401
+
+    group_buy = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
+    if not group_buy:
+        return jsonify({"result": "fail", "msg": "게시글 없음"}), 404
+
+    if not is_author_of_groupbuy(group_buy, user_doc):
+        return jsonify({"result": "fail", "msg": "작성자만 상태 변경이 가능합니다."}), 403
+
+    db.group_buys.update_one(
+        {"_id": ObjectId(group_buy_id)},
+        {"$set": {"status": new_status, "updatedAt": datetime.now()}}
+    )
+
+    return jsonify({"result": "success", "status": new_status, "statusLabel": GROUPBUY_STATUSES[new_status]})
 
 
+# =====================================================================
 # productId를 제공하면 상품명, 가격을 반환합니다.
-import requests
-
-app.config['JSON_AS_ASCII'] = False
-app.json.ensure_ascii = False
+# =====================================================================
 @app.route('/api/product-detail/<productId>', methods=['GET'])
 def getProductDetail(productId):
     productInfo = db.productInfo.find_one({'productId': productId})
     if productInfo and datetime.now() <= productInfo.get('ttl', datetime.min):
         productInfo.pop('_id', None)
-        print("cached data is used!!!", productInfo.get("productName"))
         productInfo['ttl'] = productInfo['ttl'].isoformat()
         return jsonify(productInfo)
     else:
@@ -471,7 +482,6 @@ def getProductDetail(productId):
         'accept-encoding': 'gzip, deflate, br, zstd',
         'accept-language': 'ko-KR,ko;q=0.9',
         'content-type': 'application/json',
-        'cookie': 'grb_ck@cefe24f9=681bc0ff-0d4b-c8fe-8c98-23d52784994cd4; grb_recent_member_id@cefe24f9=2000155318; grb_ui@cefe24f9=9eeec5f8-6374-c375-f2ab-bdf4381d9c50; DM_DVC=81f79da2-ef4f-42f6-82e7-58fa554c3aee; grb_id_permission@cefe24f9=fail; grb_ip_permission@cefe24f9=fail',
         'origin': 'https://www.daisomall.co.kr',
         'priority': 'u=1, i',
         'referer': 'https://www.daisomall.co.kr/',
@@ -485,6 +495,7 @@ def getProductDetail(productId):
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36'
     }
     payload = {"pdNo": productId}
+
     try:
         response = requests.post(
             "https://fapi.daisomall.co.kr/pd/pdr/pdDtl/selPdDtlInfo",
@@ -492,13 +503,10 @@ def getProductDetail(productId):
             json=payload,
             timeout=5
         )
-
         response.raise_for_status()
         result_json = response.json()
 
-
         data = result_json.get('data', {})
-
         product_info = {
             "productId": data.get('pdNo'),
             "productName": data.get('exhPdNm') or data.get('pdNm'),
@@ -508,11 +516,11 @@ def getProductDetail(productId):
             "ttl": datetime.now() + timedelta(hours=24)
         }
 
-        # 없으면 새로 만들되 있으면 기존의 productId에 덮어쓰기!!
         db.productInfo.update_one(
             {"productId": productId},
-            {"$set": product_info}, upsert=True)
-
+            {"$set": product_info},
+            upsert=True
+        )
 
         product_info['ttl'] = product_info['ttl'].isoformat()
         return jsonify(product_info)
@@ -522,17 +530,33 @@ def getProductDetail(productId):
         return jsonify({"result": "fail", "msg": str(e)}), 500
 
 
+# =====================================================================
+# ✅ 주문 추가 API
+# - 모집중(open)일 때만 주문 가능 (서버에서 강제 차단)
+# =====================================================================
 @app.route('/api/order', methods=['POST'])
 def api_add_order():
-    # 1. 프론트엔드에서 보낸 데이터 받기
     data = request.get_json()
     group_buy_id = data.get('groupBuyId')
     items = data.get('items', [])
 
-    calculated_total = sum(item.get('price', 0) * item.get('quantity', 0) for item in items)
-
     if not group_buy_id or not items:
         return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
+
+    # 로그인 체크
+    if 'user_id' not in session:
+        return jsonify({"result": "fail", "msg": "로그인이 필요합니다."}), 401
+
+    # ✅ 게시글 상태 체크 (모집중만 주문 가능)
+    group_buy = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
+    if not group_buy:
+        return jsonify({"result": "fail", "msg": "게시글이 없습니다."}), 404
+
+    if group_buy.get("status") != "open":
+        status_label = GROUPBUY_STATUSES.get(group_buy.get("status", ""), group_buy.get("status", ""))
+        return jsonify({"result": "fail", "msg": f"현재 상태({status_label})에서는 신청/주문이 불가능합니다."}), 403
+
+    calculated_total = sum(item.get('price', 0) * item.get('quantity', 0) for item in items)
 
     order_user = db.users.find_one({"_id": ObjectId(session['user_id'])})
     if not order_user:
@@ -540,9 +564,8 @@ def api_add_order():
 
     now = datetime.now()
 
-
     new_order = {
-        "_id": ObjectId(),  # 이 주문표 자체의 고유 ID (삭제 기능을 위해 필요함!)
+        "_id": ObjectId(),
         "groupBuyId": ObjectId(group_buy_id),
         "user": {
             "userId": order_user["_id"],
@@ -551,29 +574,23 @@ def api_add_order():
             "generation": order_user.get("generation", 0)
         },
         "status": "pending",
-        "totalAmount": calculated_total,  # 백엔드가 직접 계산한 금액
+        "totalAmount": calculated_total,
         "items": items,
         "createdAt": now,
         "updatedAt": now
     }
 
-    # 4. DB 업데이트 (동시성 방어 및 원자성 보장)
     try:
         db.group_buys.update_one(
             {"_id": ObjectId(group_buy_id)},
-            {
-                # 배열에는 새로운 주문을 쑤셔 넣고($push)
-                "$push": {"orders": new_order},
-                # # 현재 총액에는 방금 계산한 금액을 안전하게 더해라($inc)
-                # "$inc": {"currentAmount": calculated_total}
-            }
+            {"$push": {"orders": new_order}}
         )
     except Exception as e:
         print(f"주문 DB 업데이트 에러: {e}")
         return jsonify({"result": "fail", "msg": "DB 저장 중 오류가 발생했습니다."}), 500
 
-    # 5. 프론트엔드에 성공 신호 보내기 (새로고침을 유도함)
     return jsonify({"result": "success"})
 
+
 if __name__ == '__main__':
-    app.run(port = 5001, debug=True)
+    app.run(port=5001, debug=True)
