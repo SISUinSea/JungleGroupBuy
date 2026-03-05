@@ -95,7 +95,6 @@ def logout():
 # =====================================================================
 @app.route('/api/user/me', methods=['GET', 'POST']) #마이페이지 정보 수집
 def user_me():
-    session['username']='test_user'
     user_id=session.get('username')
     if not user_id:
         return redirect('/api/login')
@@ -105,7 +104,7 @@ def user_me():
     
     else:
         password_receive=request.form['password_give']
-        user=db.users.fine_one({'username':user_id})
+        user=db.users.find_one({'username':user_id})
         hashed_password=user.get('hashed_password')
         if hashed_password and bcrypt.checkpw(password_receive.encode('uft-8'), hashed_password):
             user_info=db.users.find_one({'username':user_id}, {'hashed_password': 0})
