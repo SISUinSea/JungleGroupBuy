@@ -302,7 +302,7 @@ def my_order_list():
     user_info = db.users.find_one({'username': user_id})
     if not user_info:
         return redirect('/api/login')
-    
+
     real_name = user_info.get('name')
 
     # 3. 쿼리 설정: (내가 방장인 아이디) OR (참여자 명단에 내 실명)
@@ -585,6 +585,59 @@ def api_add_order():
         return jsonify({"result": "fail", "msg": "DB 저장 중 오류가 발생했습니다."}), 500
 
     return jsonify({"result": "success"})
+
+
+@app.route('/api/group-buy/<group_buy_id>/order/<order_id>', methods=['DELETE'])
+def api_delete_order(group_buy_id, order_id):
+    try:
+        # 해당 공동구매 글 조회
+        group_buy = db.group_buys.find_one({"_id": ObjectId(group_buy_id)})
+        if not group_buy:
+            return jsonify({"result": "fail", "msg": "존재하지 않는 공동주문입니다."}), 404
+
+        # 삭제할 주문 찾기 (배열 순회)
+        target_order = None
+        for o in group_buy.get("orders", []):
+            if str(o.get("_id")) == order_id:
+                target_order = o
+                break
+
+        if not target_order:
+            return jsonify({"result": "fail", "msg": "삭제할 주문을 찾을 수 없습니다."}), 404
+
+        # 권한 검증 (주문자 본인 || 방장)
+        current_user_id = session.get('user_id')
+        if not current_user_id:
+            return jsonify({"result": "fail", "msg": "로그인이 필요합니다."}), 401
+
+        order_user_id = str(target_order["user"]["userId"])
+        author_id = str(group_buy["author"]["userId"])
+
+        # 본인도 아니고 방장도 아니라면 거부
+        if current_user_id != order_user_id and current_user_id != author_id:
+            return jsonify({"result": "fail", "msg": "주문을 삭제할 권한이 없습니다."}), 403
+
+
+        # 금액이 포함된 경우에는 그 금액도 빼야함
+        if target_order["status"] != "pending":
+            amount_to_subtract = -target_order["totalAmount"]
+
+            db.group_buys.update_one(
+                {"_id": ObjectId(group_buy_id)},
+                {
+                    "$pull": {"orders": {"_id": ObjectId(order_id)}},
+                    "$inc": {"currentAmount": amount_to_subtract}
+                }
+            )
+        db.group_buys.update_one({"_id": ObjectId(group_buy_id)},
+                {
+                    "$pull": {"orders": {"_id": ObjectId(order_id)}}
+                })
+        return jsonify({"result": "success", "msg": "주문이 정상적으로 삭제되었습니다."})
+
+    except Exception as e:
+        print(f"주문 삭제 중 서버 에러: {e}")
+        return jsonify({"result": "fail", "msg": "서버 내부 에러가 발생했습니다."}), 500
 
 
 if __name__ == '__main__':

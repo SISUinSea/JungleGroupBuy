@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌">
+    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: 다이소 상품이 DB에 없을 때 발생하는 오류 원인 로직 수정">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/groupBuyDetail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/groupBuyDetail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,7 +175,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772693478460</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="feat: 다이소 상품이 DB에 없을 때 발생하는 오류 원인 로직 수정">
+      <option name="closed" value="true" />
+      <created>1772695357679</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1772695357679</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -199,7 +208,8 @@
     <MESSAGE value="feat: url 입력 시 자동으로 상품명, 가격 가져오는 기능 구현" />
     <MESSAGE value="feat: url-상품 정보 DB cache에 유효기간 적용" />
     <MESSAGE value="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: 내가 작성한 공동주문 뱃지 groupBuyList 페이지에서 표시하도록 원상복귀&#10;- is_author, is_participant 변수 template에 넘겨줌" />
+    <MESSAGE value="feat: 다이소 상품이 DB에 없을 때 발생하는 오류 원인 로직 수정" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 다이소 상품이 DB에 없을 때 발생하는 오류 원인 로직 수정" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JungleGroupBuy$JungleGroupBuy.coverage" NAME="JungleGroupBuy 커버리지 결과" MODIFIED="1772623547147" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />

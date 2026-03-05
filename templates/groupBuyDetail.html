@@ -145,7 +145,7 @@
 
                             </td>
                             <td class="px-6 py-5 text-right">
-                                <button class="text-gray-300 hover:text-red-500 transition">삭제</button>
+                                <button onclick="deleteOrder('{{ product._id|string }}', '{{ order._id|string }}')" class="text-gray-300 hover:text-red-500 transition">삭제</button>
                             </td>
                         </tr>
                         <tr class="bg-gray-50/30">
@@ -430,6 +430,28 @@
         }
     }
 
+    async function deleteOrder(productId, orderId) {
+        if(!confirm('정말로 이 주문을 삭제하시겠습니까?')) return;
+
+        try {
+            const response = await fetch(`/api/group-buy/${productId}/order/${orderId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            if(result.result === 'success') {
+                alert(result.msg);
+                window.location.reload();
+            } else {
+                alert(result.msg);
+            }
+        } catch (e) {
+            alert("삭제 요청 중 오류가 발생했습니다.");
+            console.error(e);
+        }
+    }
+
+    // 페이지 로드 시 초기 렌더링
     renderList();
 </script>
 
