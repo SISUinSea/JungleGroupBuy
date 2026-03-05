@@ -93,7 +93,7 @@ def logout():
 # =====================================================================
 # 🚧 [영역 3]
 # =====================================================================
-@app.route('/api/user/me', methods=['GET']) #마이페이지 정보 수집
+@app.route('/mypage', methods=['GET']) #마이페이지 정보 수집
 def user_me():
     session['username']='test_user'
     user_id=session.get('username')
@@ -101,18 +101,20 @@ def user_me():
         user_info=db.user.find_one({'username':user_id}, {'hashed_password':0})
         return render_template('mypage.html', user_info=user_info)
     else:
-        return redirect('/api/login')
+        return redirect('/login')   #api/login -> /login 으로 변경하셔야 해용
 
+@app.route('/update', methods=['POST']) #정보수정(이름, 반, 기수)
 @app.route('/api/user/update', methods=['POST']) #정보수정(이름, 반, 기수)
 def user_update():
     user_id=session.get('username')
     if not user_id:
-        return redirect('/api/login')
+        return redirect('/login')   #api/login -> /login 으로 변경하셔야 해용
     
     name=request.form.get('name','').strip()
     class_number=request.form.get('class_number','').strip()
     generation=request.form.get('generation','').strip()
     print(f"DEBUG: '{name}', '{class_number}', '{generation}'")
+    print(request.form)
 
     if not name or not class_number or not generation:
         return "<script>alert('모든 정보를 올바르게 입력해주세요.'); history.back();</script>"
@@ -123,9 +125,10 @@ def user_update():
         'generation':generation
     }})
     
-    return "<script>alert('수정이 완료되었습니다!'); window.location.href='/api/user/me';</script>"
+    return "<script>alert('수정이 완료되었습니다!'); window.location.href='/mypage';</script>"
 
-    
+@app.route('/my-orders', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
+
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
     user_id=session.get('username')
@@ -133,7 +136,7 @@ def user_order():
         user_orders=list(db.group_buys.find({'username':user_id}).sort('deadline', 1).limit(10))
         return render_template('.html', user_orders=user_orders)
     else:
-        return redirect('/api/login')
+        return redirect('/login') #api/login -> /login 으로 변경하셔야 해용
 
 
 
