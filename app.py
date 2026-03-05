@@ -429,8 +429,8 @@ app.json.ensure_ascii = False
 @app.route('/api/product-detail/<productId>', methods=['GET'])
 def getProductDetail(productId):
     productInfo = db.productInfo.find_one({'productId': productId})
-    productInfo.pop('_id', None)
     if productInfo and datetime.now() <= productInfo.get('ttl', datetime.min):
+        productInfo.pop('_id', None)
         print("cached data is used!!!", productInfo.get("productName"))
         productInfo['ttl'] = productInfo['ttl'].isoformat()
         return jsonify(productInfo)
