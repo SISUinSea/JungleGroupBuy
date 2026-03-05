@@ -30,6 +30,103 @@
             document.getElementById("generation").value = "";
             document.getElementById("class_number").value = "";
         }
+
+        const username = document.getElementById('username');
+        const username_length_error = document.getElementById('username_length_error');
+        const username_char_error = document.getElementById('username_char_error');
+        const username_duplicate_check_btn = document.getElementById('username_duplicate_check_btn');
+        const usernameRegex = /^[a-zA-Z0-9_]{4,12}$/; // 4-12자 이내의 영문, 숫자, _만 허용
+        let isUsernamechecked = false;
+        const password = document.getElementById('password');
+        const password_check = document.getElementById('password_check');
+        const password_error = document.getElementById('password_error');
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/; // 영문, 숫자, 일부 특수기호만 각각 하나 이상씩 포함해서 8-20자 이내
+        const joinBtn = document.getElementById('joinBtn');
+
+        username.addEventListener('input', () => {
+            const value = username.value;
+            isUsernameChecked = false;
+
+            // 1. 길이 검사 (4~12자)
+            if ((value.length > 0) && (value.length < 4 || value.length > 12)) {
+                username_length_error.classList.remove('hidden');
+            } else {
+                username_length_error.classList.add('hidden');
+            }
+
+            // 2. 문자 규칙 검사
+            if (!usernameRegex.test(value)) {
+                username_char_error.classList.remove('hidden');
+            } else {
+                username_char_error.classList.add('hidden');
+            }
+        });
+
+        username_duplicate_check_btn.addEventListener('click', () => {
+            const currentID = username.value;
+            const usernameRegex = /^[a-zA-Z0-9_]*$/; 
+
+            if (currentID.length < 4 || currentID.length > 12 || !usernameRegex.test(currentID)) {
+            alert("아이디 유효성을 확인해주세요.");
+            return;
+            } 
+            
+            fetch('/signup/username_duplicate_check',{
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: currentID
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.isDuplicate) {
+                alert("이미 사용 중인 아이디입니다.");
+                isUsernameChecked = false;
+                } else {
+                alert("사용 가능한 아이디입니다.");
+                isUsernameChecked = true;
+                }
+            })
+            .catch(error => {
+                console.error("통신 오류:", error);
+                alert("서버와 통신 중 오류가 발생했습니다.");
+            });
+        });
+
+        function checkPasswordMatch() {
+            password.value !== password_check.value ? password_check_error.classList.remove('hidden') : password_check_error.classList.add('hidden');
+        }
+
+        password.addEventListener('input', () => {
+            checkPasswordMatch();
+            const value = password.value;
+
+            if(!strongPasswordRegex.test(value)) {
+                password_error.classList.remove('hidden');
+            } else {
+                password_error.classList.add('hidden');
+            }
+        });
+
+        password_check.addEventListener('input', () => {
+            checkPasswordMatch();
+        });
+
+        joinBtn.addEventListener('click', (event) => {
+            const isIdValid = usernameRegex.test(username.value);
+            const isPwValid = strongPasswordRegex.test(password.value);
+            const isPwMatch = password.value === password_check.value;
+
+            if ( isIdValid && isPwValid && isPwMatch && isUsernameChecked) {
+                alert("회원가입 완료");
+            } else {
+                event.preventDefault();
+                alert("입력 내용을 다시 확인해주세요.");
+            }
+        });
+
+
     </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -56,9 +153,12 @@
                     <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div class="col-span-full">
                             <label for="username" class="block text-sm/6 font-medium text-gray-900">아이디</label>
-                            <div class="mt-2">
+                            <div class="mt-2 flex gap-2">
                                 <input id="username" type="text" name="username" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required/>
+                                <button type="button" id="username_duplicate_check_btn" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">중복 확인</button>
                             </div>
+                            <p id="username_length_error" class="mt-2 text-sm text-red-600 hidden">아이디는 4자 이상, 12자 이하로 입력해주세요.</p>
+                            <p id="username_char_error" class="mt-2 text-sm text-red-600 hidden">아이디에는 영문, 숫자, '_' 이외에는 사용이 불가합니다.</p>
                         </div>
 
                         <div class="col-span-full">
@@ -66,6 +166,7 @@
                             <div class="mt-2">
                                 <input id="password" type="password" name="password" autocomplete="password" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required/>
                             </div>
+                            <p id="password_error" class="mt-2 text-sm text-red-600 hidden">비밀번호 조건을 확인해주세요.(8자~20자, 영문대소문자+숫자+특수기호 조합 권장)</p>
                         </div>
 
                         <div class="col-span-full">
@@ -73,6 +174,7 @@
                             <div class="mt-2">
                                 <input id="password_check" type="password" name="password_check" autocomplete="password" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required/>
                             </div>
+                            <p id="password_check_error" class="mt-2 text-sm text-red-600 hidden">비밀번호가 일치하지 않습니다.</p>
                         </div>
 
                         <div class="col-span-full">
@@ -80,13 +182,16 @@
                             <div class="mt-2">
                                 <input id="name" type="text" name="name" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required/>
                             </div>
+                            <p id="name_length_error" class="mt-2 text-sm text-red-600 hidden">닉네임은 2자 이상, 30자 이하로 입력해주세요.</p>
                         </div>
 
                         <div class="col-span-full">
                             <label for="slack_email" class="block text-sm/6 font-medium text-gray-900">이메일</label>
                             <div class="mt-2">
                                 <input id="slack_email" type="email" name="slack_email" autocomplete="email" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required/>
+                                <button type="button" id="email_authorization_btn" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">중복 확인</button>
                             </div>
+                            <p id="email_format_error" class="mt-2 text-sm text-red-600 hidden">올바른 형식의 이메일을 입력해주세요.</p>
                         </div>
 
                         <div class="sm:col-span-3 sm:col-start-1">
@@ -116,7 +221,7 @@
                                     <label for="comments">개인정보 수집 및 이용 동의</label>
                                 </div>
                                 <div class="flex gap-3">
-                                    <input id="candidates" type="checkbox" name="candidates"/>
+                                    <input id="candidates" type="checkbox" name="candidates" checked required/>
                                     <label for="candidates">Candidates</label>
                                 </div>
                                 <div class="flex gap-3">
@@ -131,7 +236,7 @@
 
             <div class="mt-6 flex items-center justify-end gap-x-6">
                 <button type="button" onclick="cancel_form()" class="text-sm/6 font-semibold text-gray-900">취소</button>
-                <button type="submit" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">저장</button>
+                <button type="submit" id="joinBtn" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">저장</button>
             </div>
         </form>
         {% endblock %}
