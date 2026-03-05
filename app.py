@@ -5,6 +5,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from flask_bcrypt import Bcrypt # 비밀번호 암호화 라이브러리
 from functools import wraps     # 로그인 상태 체크 데코레이터
+import re
 
 app = Flask(__name__)
 app.secret_key = 'jungle'
@@ -27,6 +28,7 @@ def signup():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        password_check = request.form['password_check']
         name = request.form['name']
         email = request.form['slack_email']
         generation = request.form['generation']
@@ -35,6 +37,35 @@ def signup():
 
         # 비밀번호 암호화
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        # 서버 측 유효성 검증 규칙
+        strong_pw_pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$'
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+        # 1. 누락 값 확인
+        if not all([username, password, name, email, generation, class_number]):
+            return "<script>alert('모든 항목을 입력해주세요.'); history.back();</script>"
+
+        # 2. 아이디 형식 확인
+        if not re.match(r'^[a-zA-Z0-9_]{4,12}$', username):
+            return "<script>alert('아이디 형식이 올바르지 않습니다.'); history.back();</script>"
+
+        # 3. 비밀번호 강도 확인
+        if not re.match(strong_pw_pattern, password):
+            return "<script>alert('비밀번호가 보안 규칙에 맞지 않습니다.'); history.back();</script>"
+        if password != password_check:
+            return "<script>alert('비밀번호가 일치하지 않습니다.'); history.back();</script>"
+
+        if not re.match(r'^.{2,30}$', name):
+            return "<script>alert('이름은 2-30자 이내여야 합니다.'); history.back();</script>"
+
+        # 4. 이메일 형식 확인
+        if not re.match(email_pattern, email):
+            return "<script>alert('이메일 형식이 올바르지 않습니다.'); history.back();</script>"
+
+        # 5. DB 중복 최종 확인
+        if db.users.find_one({'username': username}):
+            return "<script>alert('이미 존재하는 아이디입니다.'); history.back();</script>"
 
         user_info = {
             'username': username, 
@@ -47,7 +78,25 @@ def signup():
             }
         
         db.users.insert_one(user_info)
-        return redirect('/login')
+        return "<script>alert('회원가입이 완료되었습니다!'); location.href='/login';</script>"
+
+@app.route('/signup/username_duplicate_check', methods=['POST'])
+def username_duplicate_check():
+    data = request.get_json()
+    requested_username = data.get('username')
+
+    user = db.users.find_one({'username': requested_username})
+
+    if user:
+        is_duplicate = True
+    else:
+        is_duplicate = False
+    
+    return jsonify({
+        "isDuplicate": is_duplicate
+    })
+
+
      
 
 # =====================================================================

@@ -20,114 +20,7 @@
         }
     </script>
 
-    <script>
-        function cancel_form() {
-            document.getElementById("username").value = "";
-            document.getElementById("password").value = "";
-            document.getElementById("password_check").value = "";
-            document.getElementById("name").value = "";
-            document.getElementById("slack_email").value = "";
-            document.getElementById("generation").value = "";
-            document.getElementById("class_number").value = "";
-        }
-
-        const username = document.getElementById('username');
-        const username_length_error = document.getElementById('username_length_error');
-        const username_char_error = document.getElementById('username_char_error');
-        const username_duplicate_check_btn = document.getElementById('username_duplicate_check_btn');
-        const usernameRegex = /^[a-zA-Z0-9_]{4,12}$/; // 4-12자 이내의 영문, 숫자, _만 허용
-        let isUsernamechecked = false;
-        const password = document.getElementById('password');
-        const password_check = document.getElementById('password_check');
-        const password_error = document.getElementById('password_error');
-        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/; // 영문, 숫자, 일부 특수기호만 각각 하나 이상씩 포함해서 8-20자 이내
-        const joinBtn = document.getElementById('joinBtn');
-
-        username.addEventListener('input', () => {
-            const value = username.value;
-            isUsernameChecked = false;
-
-            // 1. 길이 검사 (4~12자)
-            if ((value.length > 0) && (value.length < 4 || value.length > 12)) {
-                username_length_error.classList.remove('hidden');
-            } else {
-                username_length_error.classList.add('hidden');
-            }
-
-            // 2. 문자 규칙 검사
-            if (!usernameRegex.test(value)) {
-                username_char_error.classList.remove('hidden');
-            } else {
-                username_char_error.classList.add('hidden');
-            }
-        });
-
-        username_duplicate_check_btn.addEventListener('click', () => {
-            const currentID = username.value;
-            const usernameRegex = /^[a-zA-Z0-9_]*$/; 
-
-            if (currentID.length < 4 || currentID.length > 12 || !usernameRegex.test(currentID)) {
-            alert("아이디 유효성을 확인해주세요.");
-            return;
-            } 
-            
-            fetch('/signup/username_duplicate_check',{
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    username: currentID
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.isDuplicate) {
-                alert("이미 사용 중인 아이디입니다.");
-                isUsernameChecked = false;
-                } else {
-                alert("사용 가능한 아이디입니다.");
-                isUsernameChecked = true;
-                }
-            })
-            .catch(error => {
-                console.error("통신 오류:", error);
-                alert("서버와 통신 중 오류가 발생했습니다.");
-            });
-        });
-
-        function checkPasswordMatch() {
-            password.value !== password_check.value ? password_check_error.classList.remove('hidden') : password_check_error.classList.add('hidden');
-        }
-
-        password.addEventListener('input', () => {
-            checkPasswordMatch();
-            const value = password.value;
-
-            if(!strongPasswordRegex.test(value)) {
-                password_error.classList.remove('hidden');
-            } else {
-                password_error.classList.add('hidden');
-            }
-        });
-
-        password_check.addEventListener('input', () => {
-            checkPasswordMatch();
-        });
-
-        joinBtn.addEventListener('click', (event) => {
-            const isIdValid = usernameRegex.test(username.value);
-            const isPwValid = strongPasswordRegex.test(password.value);
-            const isPwMatch = password.value === password_check.value;
-
-            if ( isIdValid && isPwValid && isPwMatch && isUsernameChecked) {
-                alert("회원가입 완료");
-            } else {
-                event.preventDefault();
-                alert("입력 내용을 다시 확인해주세요.");
-            }
-        });
-
-
-    </script>
+    
 </head>
 <body class="bg-gray-100 min-h-screen">
     <!-- 상단 네비게이션 바 -->
@@ -245,5 +138,165 @@
     <footer class="text-center py-10 text-gray-400">
         © 2026 Jungle Discovery Group Buy
     </footer>
+
+
+    <script>
+        function cancel_form() {
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("password_check").value = "";
+            document.getElementById("name").value = "";
+            document.getElementById("slack_email").value = "";
+            document.getElementById("generation").value = "";
+            document.getElementById("class_number").value = "";
+        }
+
+        const username = document.getElementById('username');
+        const username_length_error = document.getElementById('username_length_error');
+        const username_char_error = document.getElementById('username_char_error');
+        const username_duplicate_check_btn = document.getElementById('username_duplicate_check_btn');
+        const usernameRegex = /^[a-zA-Z0-9_]{4,12}$/; // 4-12자 이내의 영문, 숫자, _만 허용
+        let isUsernameChecked = false;
+        const password = document.getElementById('password');
+        const password_check = document.getElementById('password_check');
+        const password_error = document.getElementById('password_error');
+        const password_check_error = document.getElementById('password_check_error');
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/; // 영문, 숫자, 일부 특수기호만 각각 하나 이상씩 포함해서 8-20자 이내
+        const joinBtn = document.getElementById('joinBtn');
+
+        username.addEventListener('input', () => {
+            const value = username.value;
+            isUsernameChecked = false;
+
+            // 1. 길이 검사 (4~12자)
+            if ((value.length > 0) && (value.length < 4 || value.length > 12)) {
+                username_length_error.classList.remove('hidden');
+            } else {
+                username_length_error.classList.add('hidden');
+            }
+
+            // 2. 문자 규칙 검사
+            if (!usernameRegex.test(value)) {
+                username_char_error.classList.remove('hidden');
+            } else {
+                username_char_error.classList.add('hidden');
+            }
+        });
+
+        username_duplicate_check_btn.addEventListener('click', () => {
+            const currentID = username.value;
+            const usernameRegex = /^[a-zA-Z0-9_]*$/; 
+
+            if (currentID.length < 4 || currentID.length > 12 || !usernameRegex.test(currentID)) {
+            alert("아이디 유효성을 확인해주세요.");
+            return;
+            } 
+            
+            fetch('/signup/username_duplicate_check',{
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: currentID
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.isDuplicate) {
+                alert("이미 사용 중인 아이디입니다.");
+                isUsernameChecked = false;
+                } else {
+                alert("사용 가능한 아이디입니다.");
+                isUsernameChecked = true;
+                }
+            })
+            .catch(error => {
+                console.error("통신 오류:", error);
+                alert("서버와 통신 중 오류가 발생했습니다.");
+            });
+        });
+
+        function checkPasswordMatch() {
+            password.value !== password_check.value ? password_check_error.classList.remove('hidden') : password_check_error.classList.add('hidden');
+        }
+
+        password.addEventListener('input', () => {
+            checkPasswordMatch();
+            const value = password.value;
+
+            if(!strongPasswordRegex.test(value)) {
+                password_error.classList.remove('hidden');
+            } else {
+                password_error.classList.add('hidden');
+            }
+        });
+
+        password_check.addEventListener('input', () => {
+            checkPasswordMatch();
+        });
+
+        const signupForm = document.getElementById('signup-form');
+
+        signupForm.addEventListener('submit', (event) => {
+            const currentID = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const passwordCheck = document.getElementById('password_check').value;
+            const email = document.getElementById('slack_email').value;
+            const name = document.getElementById('name').value;
+            const generation = document.getElementById('generation').value;
+            const classNumber = document.getElementById('class_number').value;
+
+            // 정규식 정의
+            const usernameRegex = /^[a-zA-Z0-9_]{4,12}$/;
+            const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/;
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+            // 검증 로직 시작
+            if (!usernameRegex.test(currentID)) {
+                alert("아이디는 4~12자의 영문, 숫자, _만 가능합니다.");
+                event.preventDefault();
+                return;
+            }
+
+            if (!isUsernameChecked) {
+                alert("아이디 중복 확인을 먼저 해주세요.");
+                event.preventDefault();
+                return;
+            }
+
+            if (!strongPasswordRegex.test(password)) {
+                alert("비밀번호는 8~20자이며 영문 대/소문자, 숫자, 특수문자를 모두 포함해야 합니다.");
+                event.preventDefault();
+                return;
+            }
+
+            if (password !== passwordCheck) {
+                alert("비밀번호가 일치하지 않습니다.");
+                event.preventDefault();
+                return;
+            }
+
+            if(name.length < 2 || name.length > 30) {
+                alert("이름은 2~30자여야 합니다.");
+                event.preventDefault();
+                return;
+}
+
+            if (!emailRegex.test(email)) {
+                alert("올바른 이메일 형식이 아닙니다.");
+                event.preventDefault();
+                return;
+            }
+
+            if (!name || !generation || !classNumber) {
+                alert("모든 필수 항목을 입력해주세요.");
+                event.preventDefault();
+                return;
+            }
+        
+            // 모든 검사 통과 시 전송
+        });
+
+
+    </script>
 </body>
 </html>
