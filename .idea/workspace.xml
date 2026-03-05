@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="main.js도 개발 구역 나누기">
+    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: 내 공동주문, 내가 참여중인 주문 뱃지로 표시">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,6 +96,7 @@
       <workItem from="1772620156279" duration="260000" />
       <workItem from="1772620435388" duration="621000" />
       <workItem from="1772621071122" duration="5373000" />
+      <workItem from="1772675786446" duration="1997000" />
     </task>
     <task id="LOCAL-00001" summary="inital commit">
       <option name="closed" value="true" />
@@ -120,7 +122,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772624962033</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="feat: 내 공동주문, 내가 참여중인 주문 뱃지로 표시">
+      <option name="closed" value="true" />
+      <created>1772674924766</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1772674924766</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
