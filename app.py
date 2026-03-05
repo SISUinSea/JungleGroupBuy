@@ -93,38 +93,52 @@ def logout():
 # =====================================================================
 # 🚧 [영역 3]
 # =====================================================================
-@app.route('/mypage', methods=['GET']) #마이페이지 정보 수집
+@app.route('/mypage', methods=['GET'])
+@login_required
 def user_me():
-    session['username']='test_user'
-    user_id=session.get('username')
+    user_id = session.get('username')
+
     if user_id:
-        user_info=db.user.find_one({'username':user_id}, {'hashed_password':0})
+        user_info = db.users.find_one(
+            {'username': user_id},
+            {'password': 0}
+        )
         return render_template('mypage.html', user_info=user_info)
     else:
         return redirect('/login')   #api/login -> /login 으로 변경하셔야 해용
 
-@app.route('/update', methods=['POST']) #정보수정(이름, 반, 기수)
+@app.route('/update', methods=['POST'])
 def user_update():
     user_id=session.get('username')
+
     if not user_id:
-        return redirect('/login')   #api/login -> /login 으로 변경하셔야 해용
-    
+        return redirect('/login')
+
     name=request.form.get('name','').strip()
     class_number=request.form.get('class_number','').strip()
     generation=request.form.get('generation','').strip()
-    print(f"DEBUG: '{name}', '{class_number}', '{generation}'")
+
     print(request.form)
-
-    if not name or not class_number or not generation:
-        return "<script>alert('모든 정보를 올바르게 입력해주세요.'); history.back();</script>"
-
-    db.user.update_one({'username': session['username']}, {'$set': {
-        'name':name,
-        'class_number':class_number,
-        'generation':generation
-    }})
+    print("SESSION USER:", user_id)
+    print("SESSION:", session)
     
-    return "<script>alert('수정이 완료되었습니다!'); window.location.href='/mypage';</script>"
+    if not name or not class_number or not generation:
+        return "<script>alert('모든 필드를 입력해주세요.'); history.back();</script>"
+
+    result = db.users.update_one(
+        {'username': user_id},
+        {'$set': {
+            'name': name,
+            'class_number': class_number,
+            'generation': generation
+        }}
+    )
+
+    print("MATCHED:", result.matched_count)
+    print("MODIFIED:", result.modified_count)
+    if result.matched_count == 0:
+        return "<script>alert('사용자를 찾을 수 없습니다'); location.href='/mypage';</script>"
+    return "<script>alert('수정 완료'); location.href='/mypage';</script>"
 
 @app.route('/my-orders', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
@@ -180,7 +194,7 @@ def api_create_group_buy():
 
     # TODO: 나중에는 session['user_id'] 등을 통해 실제 로그인 유저를 가져와야
     # TODO: todo....... user > users 컬렉션으로 변경되었음
-    author_user = db.user.find_one({"name": "메타몽"})
+    author_user = db.users.find_one({"name": "메타몽"})
 
     if not author_user:
         return jsonify({"result": "fail", "msg": "테스트 유저(메타몽)가 DB에 없습니다."}), 500
@@ -229,7 +243,7 @@ def api_add_order():
         return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
 
     ## TODO. 세션 구현 후 실제 유저로 연결하기
-    order_user = db.user.find_one({"name": "잠만보"})
+    order_user = db.users.find_one({"name": "잠만보"})
     if not order_user:
         return jsonify({"result": "fail", "msg": "테스트 유저(잠만보)가 없습니다."}), 500
 
