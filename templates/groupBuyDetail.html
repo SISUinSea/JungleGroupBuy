@@ -156,28 +156,33 @@
 
             <!-- 3. 입력창 구역 -->
             <div class="space-y-3">
+                <!-- 다이소 URL 입력: 여기에 이벤트 리스너가 붙습니다 -->
+                <div class="relative">
+                    <input type="text" id="input-url" placeholder="다이소 URL을 붙여넣으세요"
+                        class="w-full bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none shadow-sm transition-all"
+                        oninput="handleUrlInput(this.value)">
+                    <div id="url-loader" class="hidden absolute right-3 top-2 mt-0.5">
+                        <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    </div>
+                </div>
+
                 <div class="flex gap-2">
-                    <!-- 물품 명 입력 -->
                     <input type="text" id="input-name" placeholder="물품 명"
                         class="flex-1 min-w-0 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
-                    <!-- 개수 입력 -->
-                    <input type="number" id="input-qty" placeholder="개수"
+                    <input type="number" id="input-qty" placeholder="개수" value="1"
                         class="w-10 bg-white rounded-full px-3 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
-                    <!-- 가격 입력 -->
                     <input type="number" id="input-price" placeholder="가격"
                         class="w-16 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
 
-                    <!-- [추가] 버튼 -->
                     <button onclick="addItem()"
                         class="bg-[#E5E5E5] border border-gray-400 px-4 py-2 rounded-2xl font-bold hover:bg-white transition active:scale-95">
                         추가
                     </button>
                 </div>
-                <!-- 다이소 URL 입력 -->
-                <input type="text" id="input-url" placeholder="다이소 URL 입력"
-                    class="w-full bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
             </div>
-        </div>
+
+
+
 
         <button onclick="sendToServer()"
             class="w-full bg-gray-800 text-white py-4 rounded-2xl font-black text-lg hover:bg-black transition shadow-lg">
@@ -302,6 +307,42 @@
             location.reload();
         } else {
             alert(result.msg);
+        }
+    }
+
+    async function handleUrlInput(url) {
+        if (!url.includes('daisomall.co.kr')) return;
+
+        try {
+            const urlObj = new URL(url);
+            const pdNo = urlObj.searchParams.get('pdNo');
+
+            if (pdNo) {
+                // 로딩 표시
+                document.getElementById('url-loader').classList.remove('hidden');
+
+                const response = await fetch(`/api/product-detail/${pdNo}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // 입력창에 채워넣기
+                    document.getElementById('input-name').value = result.productName;
+                    document.getElementById('input-price').value = result.price;
+
+                    // 강조 효과
+                    document.getElementById('input-name').classList.add('ring-2', 'ring-green-400');
+                    document.getElementById('input-price').classList.add('ring-2', 'ring-green-400');
+                    setTimeout(() => {
+                        document.getElementById('input-name').classList.remove('ring-2', 'ring-green-400');
+                        document.getElementById('input-price').classList.remove('ring-2', 'ring-green-400');
+                    }, 1000);
+                }
+            }
+        } catch (e) {
+            console.error("URL 파싱 에러");
+        } finally {
+            document.getElementById('url-loader').classList.remove('hidden');
+            document.getElementById('url-loader').classList.add('hidden');
         }
     }
 

@@ -339,6 +339,76 @@ def api_create_group_buy():
     })
 
 
+
+
+# productId를 제공하면 상품명, 가격을 반환합니다.
+import requests
+
+app.config['JSON_AS_ASCII'] = False
+app.json.ensure_ascii = False
+@app.route('/api/product-detail/<productId>', methods=['GET'])
+def getProductDetail(productId):
+    productInfo = db.productInfo.find_one({'productId': productId})
+    productInfo.pop('_id', None)
+    if productInfo:
+        print("cached data is used!!!", productInfo.get("productName"))
+        return productInfo
+
+
+    headers = {
+        'authority': 'fapi.daisomall.co.kr',
+        'method': 'POST',
+        'path': '/pd/pdr/pdDtl/selPdDtlInfo',
+        'scheme': 'https',
+        'accept': 'application/json, text/plain, */*',
+        'accept-encoding': 'gzip, deflate, br, zstd',
+        'accept-language': 'ko-KR,ko;q=0.9',
+        'content-type': 'application/json',
+        'cookie': 'grb_ck@cefe24f9=681bc0ff-0d4b-c8fe-8c98-23d52784994cd4; grb_recent_member_id@cefe24f9=2000155318; grb_ui@cefe24f9=9eeec5f8-6374-c375-f2ab-bdf4381d9c50; DM_DVC=81f79da2-ef4f-42f6-82e7-58fa554c3aee; grb_id_permission@cefe24f9=fail; grb_ip_permission@cefe24f9=fail',
+        'origin': 'https://www.daisomall.co.kr',
+        'priority': 'u=1, i',
+        'referer': 'https://www.daisomall.co.kr/',
+        'sec-ch-ua': '"Not:A-Brand";v="99", "Brave";v="145", "Chromium";v="145"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-site',
+        'sec-gpc': '1',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36'
+    }
+    payload = {"pdNo": productId}
+    try:
+        response = requests.post(
+            "https://fapi.daisomall.co.kr/pd/pdr/pdDtl/selPdDtlInfo",
+            headers=headers,
+            json=payload,
+            timeout=5
+        )
+
+        response.raise_for_status()
+        result_json = response.json()
+
+
+        data = result_json.get('data', {})
+
+        product_info = {
+            "productId": data.get('pdNo'),
+            "productName": data.get('exhPdNm') or data.get('pdNm'),
+            "price": data.get('pdPrc'),
+            "imageUrl": f"https://www.daisomall.co.kr{data.get('imgUrl')}" if data.get('imgUrl') else None,
+            "status": "success"
+        }
+
+        db.productInfo.insert_one(product_info)
+
+        return jsonify(product_info)
+
+    except Exception as e:
+        print(f"에러 발생 원인: {e}")
+        return jsonify({"result": "fail", "msg": str(e)}), 500
+
+
 @app.route('/api/order', methods=['POST'])
 def api_add_order():
     # 1. 프론트엔드에서 보낸 데이터 받기
@@ -393,4 +463,4 @@ def api_add_order():
     return jsonify({"result": "success"})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port = 5001, debug=True)
