@@ -66,14 +66,41 @@
                                 {{ "{:,}".format(order.totalAmount) }}
                             </td>
                             <td class="px-6 py-5 text-center">
-                                <span class="px-3 py-1 rounded-lg text-xs font-bold
-                                    {{ 'bg-yellow-100 text-yellow-600' if order.status == 'pending' }}
-                                    {{ 'bg-blue-100 text-blue-600' if order.status == 'paid' }}
-                                    {{ 'bg-green-100 text-green-600' if order.status == 'success' }}">
-                                    {{ '입금 대기' if order.status == 'pending' }}
-                                    {{ '입금 확인' if order.status == 'paid' }}
-                                    {{ '완료' if order.status == 'success' }}
+
+                                {% if order.status == 'pending' %}
+
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-yellow-100 text-yellow-600">
+                                    입금 대기
                                 </span>
+
+                                {% if current_user_id and order.user.userId == current_user_id %}
+                                <button onclick="changeStatus('{{ product._id }}','{{ order._id }}','paid')"
+                                    class="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                                    입금 완료
+                                </button>
+                                {% endif %}
+
+                                {% elif order.status == 'paid' %}
+
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-600">
+                                    입금 완료
+                                </span>
+
+                                {% if current_user_id and product.author.userId == current_user_id %}
+                                <button onclick="changeStatus('{{ product._id }}','{{ order._id }}','confirmed')"
+                                    class="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
+                                    입금 확인
+                                </button>
+                                {% endif %}
+
+                                {% elif order.status == 'confirmed' %}
+
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold bg-green-100 text-green-600">
+                                    입금 확인
+                                </span>
+
+                                {% endif %}
+
                             </td>
                             <td class="px-6 py-5 text-right">
                                 <button class="text-gray-300 hover:text-red-500 transition">삭제</button>
@@ -130,6 +157,7 @@
 
             <!-- 3. 입력창 구역 -->
             <div class="space-y-3">
+<<<<<<< HEAD
                 <div class="flex gap-2 w-full items-center">
                     <!-- 물품 명: 가장 넓게 배분 (flex-[3]) -->
                     <input type="text" id="input-name" placeholder="물품 명"
@@ -146,6 +174,22 @@
                     <!-- [추가] 버튼: 고정 너비 유지 -->
                     <button onclick="addItem()"
                         class="flex-none bg-[#E5E5E5] border border-gray-400 px-4 py-2 rounded-2xl font-bold hover:bg-white transition active:scale-95 text-sm">
+=======
+                <div class="flex gap-2">
+                    <!-- 물품 명 입력 -->
+                    <input type="text" id="input-name" placeholder="물품 명"
+                        class="flex-1 min-w-0 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
+                    <!-- 개수 입력 -->
+                    <input type="number" id="input-qty" placeholder="개수"
+                        class="w-10 bg-white rounded-full px-3 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
+                    <!-- 가격 입력 -->
+                    <input type="number" id="input-price" placeholder="가격"
+                        class="w-16 bg-white rounded-full px-4 py-2 text-sm border-none focus:ring-2 focus:ring-blue-400 outline-none">
+
+                    <!-- [추가] 버튼 -->
+                    <button onclick="addItem()"
+                        class="bg-[#E5E5E5] border border-gray-400 px-4 py-2 rounded-2xl font-bold hover:bg-white transition active:scale-95">
+>>>>>>> 240a1dfc8ac1c0b65ee0d39fd26b0aa81c087348
                         추가
                     </button>
                 </div>
@@ -175,8 +219,13 @@
         let url = document.getElementById("input-url").value;
 
         // url은 필수가 아닙니다.
+<<<<<<< HEAD
         if (!name || !qty || !price || !url) {
             alert('물품명, 개수, 가격, 상품url을 올바르게 입력해주세요');
+=======
+        if (!name || !qty || !price) {
+            alert('물품명, 개수, 가격을 올바르게 입력해주세요');
+>>>>>>> 240a1dfc8ac1c0b65ee0d39fd26b0aa81c087348
             return;
         }
 
@@ -254,6 +303,30 @@
             window.location.reload();
         } else {
             alert("주문 실패: " + result.msg);
+        }
+    }
+
+    async function changeStatus(groupBuyId, orderId, newStatus) {
+
+        const ok = confirm("정말 상태를 변경하시겠습니까?");
+        if (!ok) return;
+
+        const res = await fetch('/api/order/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                groupBuyId: groupBuyId,
+                orderId: orderId,
+                status: newStatus
+            })
+        });
+
+        const result = await res.json();
+
+        if (result.result === 'success') {
+            location.reload();
+        } else {
+            alert(result.msg);
         }
     }
 
