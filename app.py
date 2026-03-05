@@ -1,3 +1,6 @@
+from dotenv import load_dotenv  # .env 파일에서 환경변수 로드 (시크릿 키 등)
+load_dotenv()
+
 import pymongo
 from flask import Flask, render_template, request, jsonify, redirect, session, flash
 from pymongo import MongoClient
@@ -7,6 +10,7 @@ from flask_bcrypt import Bcrypt  # 비밀번호 암호화 라이브러리
 from functools import wraps      # 로그인 상태 체크 데코레이터
 import re
 import requests
+import os
 
 app = Flask(__name__)
 app.secret_key = 'jungle'
