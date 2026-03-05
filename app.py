@@ -103,7 +103,6 @@ def user_me():
     else:
         return redirect('/api/login')
 
-<<<<<<< HEAD
 @app.route('/api/user/update', methods=['POST']) #정보수정(이름, 반, 기수)
 def user_update():
     user_id=session.get('username')
@@ -127,8 +126,6 @@ def user_update():
     return "<script>alert('수정이 완료되었습니다!'); window.location.href='/api/user/me';</script>"
 
     
-=======
->>>>>>> fba1f702e3b6a0bfc9e87898965381710c32f411
 @app.route('/api/user/order', methods=['GET']) #내 주문 정보 수집, 페이지번호는 미구현
 def user_order():
     user_id=session.get('username')
@@ -147,7 +144,23 @@ def user_order():
 @app.route('/', methods=['GET'])
 def getGroupBuyList():
     result_list = list(db.group_buys.find({}).sort("createdAt", pymongo.DESCENDING))
+    current_user_id = str(session['user_id'])
+    for item in result_list:
+        author_id = str(item['author']['userId'])
+        item['is_author'] = current_user_id == author_id
 
+        # 게시자(author)면 참여자는 아님. 게시자가 아닌 경우에만 검사함.
+        if not item['is_author']:
+            item['is_participant'] = any(
+                str(order['user']['userId']) == current_user_id for order in item.get('orders', [])
+            )
+        else:
+            item['is_participant'] = False
+
+        # print(f"DEBUG: {current_user_id}, {author_id}, {item['is_participant']}, {item['is_author']}")
+        for order in item.get('orders', []):
+            print(order['user'], current_user_id)
+        print("=======")
     return render_template('groupBuyList.html', items=result_list)
 
 
@@ -183,10 +196,10 @@ def api_create_group_buy():
 
     # TODO: 나중에는 session['user_id'] 등을 통해 실제 로그인 유저를 가져와야
     # TODO: todo....... user > users 컬렉션으로 변경되었음
-    author_user = db.user.find_one({"name": "메타몽"})
+    author_user = db.users.find_one({"_id": ObjectId(session['user_id'])})
 
     if not author_user:
-        return jsonify({"result": "fail", "msg": "테스트 유저(메타몽)가 DB에 없습니다."}), 500
+        return jsonify({"result": "fail", "msg": "유저가 DB에 없습니다."}), 500
 
     # [최종 DB 입력용 데이터 조립]
     now = datetime.now()
@@ -231,10 +244,9 @@ def api_add_order():
     if not group_buy_id or not items:
         return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
 
-    ## TODO. 세션 구현 후 실제 유저로 연결하기
-    order_user = db.user.find_one({"name": "잠만보"})
+    order_user = db.users.find_one({"_id": ObjectId(session['user_id'])})
     if not order_user:
-        return jsonify({"result": "fail", "msg": "테스트 유저(잠만보)가 없습니다."}), 500
+        return jsonify({"result": "fail", "msg": "유저가 없습니다."}), 500
 
     now = datetime.now()
 
@@ -274,4 +286,4 @@ def api_add_order():
     return jsonify({"result": "success"})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port = 5001, debug=True)
