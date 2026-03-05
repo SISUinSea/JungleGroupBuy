@@ -194,7 +194,7 @@ def api_create_group_buy():
 
     # TODO: 나중에는 session['user_id'] 등을 통해 실제 로그인 유저를 가져와야
     # TODO: todo....... user > users 컬렉션으로 변경되었음
-    author_user = db.users.find_one({"name": "메타몽"})
+    author_user = db.user.find_one({"name": "메타몽"})
 
     if not author_user:
         return jsonify({"result": "fail", "msg": "테스트 유저(메타몽)가 DB에 없습니다."}), 500
@@ -243,7 +243,7 @@ def api_add_order():
         return jsonify({"result": "fail", "msg": "잘못된 요청입니다."}), 400
 
     ## TODO. 세션 구현 후 실제 유저로 연결하기
-    order_user = db.users.find_one({"name": "잠만보"})
+    order_user = db.user.find_one({"name": "잠만보"})
     if not order_user:
         return jsonify({"result": "fail", "msg": "테스트 유저(잠만보)가 없습니다."}), 500
 
