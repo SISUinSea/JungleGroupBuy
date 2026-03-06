@@ -14,10 +14,13 @@ import os
 import threading
 import time
 
+
+MONGODB_ID = os.environ.get("MONGODB_ID")
+MONGODB_KEY = os.environ.get("MONGODB_KEY")
 app = Flask(__name__)
 app.secret_key = 'jungle'
 client = MongoClient(
-    'mongodb+srv://jungle_for_all:1234@junglegroupbuy.vvvtwuf.mongodb.net/?appName=jungleGroupBuy',
+    f'mongodb+srv://{MONGODB_ID}:{MONGODB_KEY}@junglegroupbuy.vvvtwuf.mongodb.net/?appName=jungleGroupBuy',
     tlsAllowInvalidCertificates=True
 )
 db = client.jungle_groupbuy
