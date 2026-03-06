@@ -215,12 +215,16 @@
         });
 
         all_check.addEventListener('change', () => {
-            sub_check.forEach(check => {check.checked = all_check.checked;});
+            sub_check.forEach(check => { check.checked = all_check.checked });
         });
 
-        subChecks.forEach(check => {check.addEventListener('change', () => { const allChecked = subChecks.every(c => c.checked);
-            all_check.checked = allChecked;
-        });});
+
+        sub_check.forEach(check => {
+            check.addEventListener('change', () => { 
+                let allChecked = sub_check.every(c => c.checked);
+                all_check.checked = allChecked;
+            });
+        });
 
         const signupForm = document.getElementById('signup-form');
 
