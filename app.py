@@ -22,6 +22,10 @@ client = MongoClient(
 )
 db = client.jungle_groupbuy
 
+
+# URL 넣으면 상품 정보 뱉는 DB 콜렉션에 인덱스 넣은거. 빨리 찾으려고
+db.productInfo.create_index("productId", unique=True)
+
 bcrypt = Bcrypt(app)
 
 app.config['JSON_AS_ASCII'] = False
