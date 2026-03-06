@@ -621,6 +621,9 @@ def my_order_list():
 def getGroupBuyList():
     current_user_id = session.get('user_id')
 
+    if not current_user_id:
+        return redirect('/login')
+
     sort = request.args.get("sort", "").strip()  # "", "remaining"
     sort_stage = {"$sort": {"createdAt": -1}}   # 기본: 최신순
 
@@ -938,7 +941,6 @@ def api_add_order():
         return jsonify({"result": "fail", "msg": "DB 저장 중 오류가 발생했습니다."}), 500
 
     return jsonify({"result": "success"})
-
 @app.route('/api/group-buy/<group_buy_id>/order/<order_id>', methods=['DELETE'])
 def api_delete_order(group_buy_id, order_id):
     try:
@@ -947,44 +949,44 @@ def api_delete_order(group_buy_id, order_id):
         if not group_buy:
             return jsonify({"result": "fail", "msg": "존재하지 않는 공동주문입니다."}), 404
 
-        # 삭제할 주문 찾기 (배열 순회)
-        target_order = None
-        for o in group_buy.get("orders", []):
-            if str(o.get("_id")) == order_id:
-                target_order = o
-                break
-
+        # 삭제할 주문 찾기
+        target_order = next((o for o in group_buy.get("orders", []) if str(o.get("_id")) == order_id), None)
         if not target_order:
             return jsonify({"result": "fail", "msg": "삭제할 주문을 찾을 수 없습니다."}), 404
 
-        # 권한 검증 (주문자 본인 || 방장)
+        # 권한 검증(방장, 참여자만 삭제 할 수 있음)
         current_user_id = session.get('user_id')
-        if not current_user_id:
-            return jsonify({"result": "fail", "msg": "로그인이 필요합니다."}), 401
-
         order_user_id = str(target_order["user"]["userId"])
         author_id = str(group_buy["author"]["userId"])
 
-        # 본인도 아니고 방장도 아니라면 거부
         if current_user_id != order_user_id and current_user_id != author_id:
             return jsonify({"result": "fail", "msg": "주문을 삭제할 권한이 없습니다."}), 403
 
-
-        # 금액이 포함된 경우에는 그 금액도 빼야함
+        # 삭제하기, 차감하기를 하나의 연산으로 묶기.
+        amount_to_subtract = 0
         if target_order["status"] == "confirmed":
             amount_to_subtract = -target_order["totalAmount"]
 
-            db.group_buys.update_one(
-                {"_id": ObjectId(group_buy_id)},
-                {
-                    "$pull": {"orders": {"_id": ObjectId(order_id)}},
-                    "$inc": {"currentAmount": amount_to_subtract}
-                }
-            )
-        db.group_buys.update_one({"_id": ObjectId(group_buy_id)},
-                {
-                    "$pull": {"orders": {"_id": ObjectId(order_id)}}
-                })
+        # 이 게시글에, 아직 이 order_id가 배열에 남아있는 경우에만!
+        update_filter = {
+            "_id": ObjectId(group_buy_id),
+            "orders._id": ObjectId(order_id)
+        }
+
+        # 삭제와 금액 차감을 하나로 묶음 -> 삭제할 수 있어야 차감할 수 있음
+        update_action = {
+            "$pull": {"orders": {"_id": ObjectId(order_id)}}
+        }
+        if amount_to_subtract != 0:
+            update_action["$inc"] = {"currentAmount": amount_to_subtract}
+
+        # DB에 업데이트를 쏘고, 실제로 몇 개가 수정되었는지 결과를 받습니다
+        result = db.group_buys.update_one(update_filter, update_action)
+
+        # 동시에 눌렀지만, 늦게 들어온 경우
+        if result.modified_count == 0:
+            return jsonify({"result": "fail", "msg": "이미 처리 중이거나 삭제된 주문입니다."}), 400
+
         return jsonify({"result": "success", "msg": "주문이 정상적으로 삭제되었습니다."})
 
     except Exception as e:

@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="style: 공동구매번호 스타일 변경">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="style: 서비스 이름 변경 정탐공 &gt; 다모여라">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/groupBuyCreate.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/groupBuyCreate.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/groupBuyList.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/groupBuyList.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/layout.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/layout.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/signup.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/signup.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,7 +114,7 @@
       <workItem from="1772690662935" duration="593000" />
       <workItem from="1772705438408" duration="2794000" />
       <workItem from="1772714620381" duration="3072000" />
-      <workItem from="1772757568994" duration="720000" />
+      <workItem from="1772757568994" duration="3982000" />
     </task>
     <task id="LOCAL-00001" summary="inital commit">
       <option name="closed" value="true" />
@@ -225,7 +220,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772727656383</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="style: 서비스 이름 변경 정탐공 &gt; 다모여라">
+      <option name="closed" value="true" />
+      <created>1772760654354</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1772760654354</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -254,7 +257,8 @@
     <MESSAGE value="feat: 공동구매의 주문 삭제 기능 추가" />
     <MESSAGE value="feat: 주문 삭제 조건 변경" />
     <MESSAGE value="style: 공동구매번호 스타일 변경" />
-    <option name="LAST_COMMIT_MESSAGE" value="style: 공동구매번호 스타일 변경" />
+    <MESSAGE value="style: 서비스 이름 변경 정탐공 &gt; 다모여라" />
+    <option name="LAST_COMMIT_MESSAGE" value="style: 서비스 이름 변경 정탐공 &gt; 다모여라" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JungleGroupBuy$JungleGroupBuy.coverage" NAME="JungleGroupBuy 커버리지 결과" MODIFIED="1772623547147" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
