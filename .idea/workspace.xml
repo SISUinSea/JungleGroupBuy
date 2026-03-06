@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="style: 서비스 이름 변경 정탐공 &gt; 다모여라">
+    <list default="true" id="a24f15c2-baf0-4068-a146-240de3a285bd" name="변경" comment="feat: 로그인 안 된 상태에서 홈화면 접근 차단 로직 추가">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
     </list>
@@ -114,7 +114,7 @@
       <workItem from="1772690662935" duration="593000" />
       <workItem from="1772705438408" duration="2794000" />
       <workItem from="1772714620381" duration="3072000" />
-      <workItem from="1772757568994" duration="3982000" />
+      <workItem from="1772757568994" duration="4403000" />
     </task>
     <task id="LOCAL-00001" summary="inital commit">
       <option name="closed" value="true" />
@@ -228,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772760654354</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="feat: 로그인 안 된 상태에서 홈화면 접근 차단 로직 추가">
+      <option name="closed" value="true" />
+      <created>1772764215534</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1772764215534</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -258,7 +266,8 @@
     <MESSAGE value="feat: 주문 삭제 조건 변경" />
     <MESSAGE value="style: 공동구매번호 스타일 변경" />
     <MESSAGE value="style: 서비스 이름 변경 정탐공 &gt; 다모여라" />
-    <option name="LAST_COMMIT_MESSAGE" value="style: 서비스 이름 변경 정탐공 &gt; 다모여라" />
+    <MESSAGE value="feat: 로그인 안 된 상태에서 홈화면 접근 차단 로직 추가" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 로그인 안 된 상태에서 홈화면 접근 차단 로직 추가" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/JungleGroupBuy$JungleGroupBuy.coverage" NAME="JungleGroupBuy 커버리지 결과" MODIFIED="1772623547147" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />

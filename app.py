@@ -589,6 +589,10 @@ def update_password():
 @app.route('/api/user/order', methods=['GET']) #나의 주문
 @login_required
 def my_order_list():
+    current_user_id = session.get('user_id')
+    if not current_user_id:
+        return redirect('/login')
+
     # 1. 세션에서 아이디(username) 가져오기
     user_id = session.get('username')
 
@@ -662,6 +666,9 @@ def getGroupBuyList():
 
 @app.route('/group-buy/<groupbuyid>', methods=['GET'])
 def getGroupBuy(groupbuyid):
+    current_user_id = session.get('user_id')
+    if not current_user_id:
+        return redirect('/login')
     result = db.group_buys.find_one({'_id': ObjectId(groupbuyid)})
     if result is None:
         return "게시글을 찾을 수 없습니다.", 404
@@ -691,6 +698,9 @@ def getGroupBuy(groupbuyid):
 
 @app.route('/group-buy/create', methods=['GET'])
 def getGroupBuyCreate():
+    current_user_id = session.get('user_id')
+    if not current_user_id:
+        return redirect('/login')
     return render_template('groupBuyCreate.html')
 
 
